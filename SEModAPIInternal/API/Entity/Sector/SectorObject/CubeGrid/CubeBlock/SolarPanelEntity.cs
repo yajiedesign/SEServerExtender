@@ -3,20 +3,23 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System;
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
+	using Sandbox.ModAPI.Ingame;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
 	[DataContract]
-	public class SolarPanelEntity : FunctionalBlockEntity
+	public class SolarPanelEntity : TerminalBlockEntity
 	{
 		#region "Attributes"
 
 		private PowerProducer m_powerProducer;
 		private float m_maxPowerOutput;
 
-		public static string SolarPanelNamespace = "";
-		public static string SolarPanelClass = "=eMM44GvCk02ICnSbvGDga6Az5t=";
+		public static string SolarPanelNamespace = "Sandbox.Game.Entities.Blocks";
+		public static string SolarPanelClass = "MySolarPanel";
 
 		public static string SolarPanelSetMaxOutputMethod = "set_MaxPowerOutput";
 
@@ -61,8 +64,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 			{
 				m_maxPowerOutput = value;
 
-				Action action = InternalUpdateMaxPowerOutput;
-				SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+				MySandboxGame.Static.Invoke( InternalUpdateMaxPowerOutput );
 			}
 		}
 
@@ -96,7 +98,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				Type type = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( SolarPanelNamespace, SolarPanelClass );
 				if ( type == null )
 					throw new Exception( "Could not find internal type for SolarPanelEntity" );
-				result &= HasMethod( type, SolarPanelSetMaxOutputMethod );
+				result &= Reflection.HasMethod( type, SolarPanelSetMaxOutputMethod );
 
 				return result;
 			}

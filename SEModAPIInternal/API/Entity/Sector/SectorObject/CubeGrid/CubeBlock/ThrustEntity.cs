@@ -4,8 +4,10 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System.ComponentModel;
 	using System.Reflection;
 	using System.Runtime.Serialization;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
 	using SEModAPI.API.TypeConverters;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 	using VRageMath;
@@ -18,8 +20,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 		private float m_thrustOverride;
 		private ThrustNetworkManager m_networkManager;
 
-		public static string ThrustNamespace = "";
-		public static string ThrustClass = "=Avs8k7NfpEpYw1QyLX0wdzrIq9=";
+		public static string ThrustNamespace = "Sandbox.Game.Entities";
+		public static string ThrustClass = "MyThrust";
 
 		public static string ThrustGetOverrideMethod = "get_ThrustOverride";
 		public static string ThrustSetOverrideMethod = "SetThrustOverride";
@@ -27,13 +29,13 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 		public static string ThrustGetMaxPowerConsumptionMethod = "get_MaxPowerConsumption";
 		public static string ThrustGetMinPowerConsumptionMethod = "get_MinPowerConsumption";
 
-		public static string ThrustNetManagerField = "=gNAvpmtOwXYmmcG9ynRDGRitUw=";
+		public static string ThrustNetManagerField = "SyncObject";
 
 		//Note: The following fields exist but are not broadcast and as such setting these on the server will do nothing client-side
-		public static string ThrustFlameColorField = "=6OD8GKOc8H2eZeBzbaPpDc8wHza=";
+		public static string ThrustFlameColorField = "m_thrustColor";
 
-		public static string ThrustLightField = "=SvdAPseZczZcMSnX1q9J0bFGki=";
-		public static string ThrustFlameScaleCoefficientField = "=Ey8BUGNI8orxc8EnSAO8vkFNiB=";
+		public static string ThrustLightField = "m_light";
+		public static string ThrustFlameScaleCoefficientField = "m_maxBillboardDistanceSquared";
 
 		//Thrust flame scale coefficient values:
 		//LargeShip-Large: 700
@@ -99,8 +101,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null && ActualObject != null )
 				{
-					Action action = InternalUpdateOverride;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateOverride );
 				}
 			}
 		}
@@ -137,12 +138,12 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				Type type = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( ThrustNamespace, ThrustClass );
 				if ( type == null )
 					throw new Exception( "Could not find internal type for ThrustEntity" );
-				result &= HasMethod( type, ThrustGetOverrideMethod );
-				result &= HasMethod( type, ThrustSetOverrideMethod );
-				result &= HasMethod( type, ThrustGetMaxThrustVectorMethod );
-				result &= HasMethod( type, ThrustGetMaxPowerConsumptionMethod );
-				result &= HasMethod( type, ThrustGetMinPowerConsumptionMethod );
-				result &= HasField( type, ThrustNetManagerField );
+				result &= Reflection.HasMethod( type, ThrustGetOverrideMethod );
+				result &= Reflection.HasMethod( type, ThrustSetOverrideMethod );
+				result &= Reflection.HasMethod( type, ThrustGetMaxThrustVectorMethod );
+				result &= Reflection.HasMethod( type, ThrustGetMaxPowerConsumptionMethod );
+				result &= Reflection.HasMethod( type, ThrustGetMinPowerConsumptionMethod );
+				result &= Reflection.HasField( type, ThrustNetManagerField );
 
 				return result;
 			}
@@ -205,8 +206,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 		private float m_lastOverride;
 
-		public static string ThrustNetManagerNamespace = "";
-		public static string ThrustNetManagerClass = "=JekhTXKmjFBlkT4vf3FViyIGcg=";
+		public static string ThrustNetManagerNamespace = "Sandbox.Game.Multiplayer";
+		public static string ThrustNetManagerClass = "MySyncThruster";
 
 		public static string ThrustNetManagerBroadcastOverrideMethod = "SendChangeThrustOverrideRequest";
 
@@ -238,7 +239,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				Type type = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( ThrustNetManagerNamespace, ThrustNetManagerClass );
 				if ( type == null )
 					throw new Exception( "Could not find network manager type for ThrustEntity" );
-				result &= BaseObject.HasMethod( type, ThrustNetManagerBroadcastOverrideMethod );
+				result &= Reflection.HasMethod( type, ThrustNetManagerBroadcastOverrideMethod );
 
 				return result;
 			}
@@ -256,8 +257,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 			m_lastOverride = overrideValue;
 
-			Action action = InternalBroadcastOverride;
-			SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+			MySandboxGame.Static.Invoke( InternalBroadcastOverride );
 		}
 
 		protected void InternalBroadcastOverride( )

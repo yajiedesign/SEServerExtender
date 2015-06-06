@@ -5,13 +5,17 @@ namespace SEModAPIInternal.API.Entity
 	using System.ComponentModel;
 	using System.IO;
 	using Microsoft.Xml.Serialization.GeneratedAssembly;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
 	using Sandbox.Common.ObjectBuilders.Voxels;
+	using SEModAPI.API;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.API.Entity.Sector;
 	using SEModAPIInternal.API.Entity.Sector.SectorObject;
 	using SEModAPIInternal.API.Utility;
 	using SEModAPIInternal.Support;
+	using VRage.ObjectBuilders;
 	using VRageMath;
 
 	public class SectorEntity : BaseObject
@@ -254,22 +258,22 @@ namespace SEModAPIInternal.API.Entity
 		private static SectorObjectManager m_instance;
 		private static Queue<BaseEntity> m_addEntityQueue = new Queue<BaseEntity>( );
 
-		public static string ObjectManagerNamespace = "";
-		public static string ObjectManagerClass = "Sandbox.Game.Entities.MyEntities";
+		public static string ObjectManagerNamespace = "Sandbox.Game.Entities";
+		public static string ObjectManagerClass = "MyEntities";
 		public static string ObjectManagerGetEntityHashSet = "GetEntities";
 		public static string ObjectManagerAddEntity = "Add";
 
 		/////////////////////////////////////////////////////////////////
 
-		public static string ObjectFactoryNamespace = "";
-		public static string ObjectFactoryClass = "=iXKU6ehmc24G5brre7PFeSWgPb=";
+		public static string ObjectFactoryNamespace = "Sandbox.Game.Entities";
+		public static string ObjectFactoryClass = "MyEntityFactory";
 
 		/////////////////////////////////////////////////////////////////
 
 		//2 Packet Types
-		public static string EntityBaseNetManagerNamespace = "";
+		public static string EntityBaseNetManagerNamespace = "Sandbox.Game.Multiplayer";
 
-		public static string EntityBaseNetManagerClass = "=r6VaZpriOkuuKqMuT2aPUQtWow=";
+		public static string EntityBaseNetManagerClass = "MySyncCreate";
 		public static string EntityBaseNetManagerSendEntity = "SendEntityCreated";
 
 		#endregion "Attributes"
@@ -329,8 +333,8 @@ namespace SEModAPIInternal.API.Entity
 				if ( type == null )
 					throw new Exception( "Could not find internal type for SectorObjectManager" );
 				bool result = true;
-				result &= BaseObject.HasMethod( type, ObjectManagerGetEntityHashSet );
-				result &= BaseObject.HasMethod( type, ObjectManagerAddEntity );
+				result &= Reflection.HasMethod( type, ObjectManagerGetEntityHashSet );
+				result &= Reflection.HasMethod( type, ObjectManagerAddEntity );
 
 				Type type2 = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( ObjectFactoryNamespace, ObjectFactoryClass );
 				if ( type2 == null )
@@ -339,7 +343,7 @@ namespace SEModAPIInternal.API.Entity
 				Type type3 = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( EntityBaseNetManagerNamespace, EntityBaseNetManagerClass );
 				if ( type3 == null )
 					throw new Exception( "Could not find entity base network manager type for SectorObjectManager" );
-				result &= BaseObject.HasMethod( type3, EntityBaseNetManagerSendEntity );
+				result &= Reflection.HasMethod( type3, EntityBaseNetManagerSendEntity );
 
 				return result;
 			}
@@ -511,13 +515,12 @@ namespace SEModAPIInternal.API.Entity
 					throw new Exception( "AddEntity queue is full. Cannot add more entities yet" );
 				}
 
-				if ( SandboxGameAssemblyWrapper.IsDebugging )
+				if ( ExtenderOptions.IsDebugging )
 					ApplicationLog.BaseLog.Debug( entity.GetType( ).Name + " '" + entity.Name + "' is being added ..." );
 
 				m_addEntityQueue.Enqueue( entity );
 
-				Action action = InternalAddEntity;
-				SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+				MySandboxGame.Static.Invoke( InternalAddEntity );
 			}
 			catch ( Exception ex )
 			{
@@ -534,7 +537,7 @@ namespace SEModAPIInternal.API.Entity
 
 				BaseEntity entityToAdd = m_addEntityQueue.Dequeue( );
 
-				if ( SandboxGameAssemblyWrapper.IsDebugging )
+				if ( ExtenderOptions.IsDebugging )
 					ApplicationLog.BaseLog.Debug( entityToAdd.GetType( ).Name + " '" + entityToAdd.GetType( ).Name + "': Adding to scene ..." );
 
 				//Create the backing object
@@ -585,7 +588,7 @@ namespace SEModAPIInternal.API.Entity
 					}
 				}
 
-				if ( SandboxGameAssemblyWrapper.IsDebugging )
+				if ( ExtenderOptions.IsDebugging )
 				{
 					Type type = entityToAdd.GetType( );
 					ApplicationLog.BaseLog.Debug( type.Name + " '" + entityToAdd.Name + "': Finished adding to scene" );
@@ -641,7 +644,7 @@ namespace SEModAPIInternal.API.Entity
 
 		new public bool Save( )
 		{
-			return WriteSpaceEngineersFile<MyObjectBuilder_Sector, MyObjectBuilder_SectorSerializer>( m_Sector.ObjectBuilder, this.FileInfo.FullName );
+			return WriteSpaceEngineersFile( m_Sector.ObjectBuilder, this.FileInfo.FullName );
 		}
 
 		#endregion "Methods"

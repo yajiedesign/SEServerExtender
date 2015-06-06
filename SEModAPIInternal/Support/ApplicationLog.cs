@@ -6,8 +6,8 @@ namespace SEModAPIInternal.Support
 	using System.Text;
 	using System.Threading;
 	using NLog;
-	using SEModAPIInternal.API.Common;
-	using VRage.Library.Utils;
+	using SEModAPI.API.Sandbox;
+	using VRage.FileSystem;
 
 	public class ApplicationLog
 	{
@@ -18,14 +18,15 @@ namespace SEModAPIInternal.Support
 		private DirectoryInfo _libraryPath;
 		private string _logFileName;
 
-		public static readonly Logger BaseLog = LogManager.GetLogger( "BaseLog" );
-		public static readonly Logger ChatLog = LogManager.GetLogger( "ChatLog" );
+		public static Logger BaseLog = LogManager.GetLogger( "BaseLog" );
+		public static Logger ChatLog = LogManager.GetLogger( "ChatLog" );
+		public static Logger PluginLog = LogManager.GetLogger( "PluginLog" );
 
 		public ApplicationLog( bool useGamePath = false )
 		{
 			_useInstancePath = useGamePath;
 
-			if ( _useInstancePath && SandboxGameAssemblyWrapper.Instance.IsGameStarted && MyFileSystem.UserDataPath != null )
+			if ( _useInstancePath && MySandboxGameWrapper.IsGameStarted && MyFileSystem.UserDataPath != null )
 			{
 				_libraryPath = new DirectoryInfo( MyFileSystem.UserDataPath );
 

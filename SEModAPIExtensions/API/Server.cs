@@ -13,9 +13,12 @@ namespace SEModAPIExtensions.API
 	using System.Windows.Forms;
 	using NLog;
 	using NLog.Targets;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
 	using SEModAPI.API;
 	using SEModAPI.API.Definitions;
+	using SEModAPI.API.Sandbox;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Chat;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.API.Server;
@@ -42,9 +45,8 @@ namespace SEModAPIExtensions.API
 
 		//Managers
 		private PluginManager _pluginManager;
-		private SandboxGameAssemblyWrapper _gameAssemblyWrapper;
 		private FactionsManager _factionsManager;
-		private ServerAssemblyWrapper _serverWrapper;
+		private DedicatedServerAssemblyWrapper _dedicatedServerWrapper;
 		private LogManager _logManager;
 		private EntityEventManager _entityEventManager;
 		private ChatManager _chatManager;
@@ -186,9 +188,8 @@ namespace SEModAPIExtensions.API
 
 		private bool SetupManagers( )
 		{
-			_serverWrapper = ServerAssemblyWrapper.Instance;
+			_dedicatedServerWrapper = DedicatedServerAssemblyWrapper.Instance;
 			_pluginManager = PluginManager.Instance;
-			_gameAssemblyWrapper = SandboxGameAssemblyWrapper.Instance;
 			_factionsManager = FactionsManager.Instance;
 			_entityEventManager = EntityEventManager.Instance;
 			_chatManager = ChatManager.Instance;
@@ -216,7 +217,7 @@ namespace SEModAPIExtensions.API
 				if ( _commandLineArgs.Debug )
 				{
 					ApplicationLog.BaseLog.Info( "Debugging enabled" );
-					SandboxGameAssemblyWrapper.IsDebugging = true;
+					ExtenderOptions.IsDebugging = true;
 				}
 				if ( _commandLineArgs.NoWcf )
 				{
@@ -234,9 +235,9 @@ namespace SEModAPIExtensions.API
 				{
 					ApplicationLog.BaseLog.Info( "Synchronous Save: Enabled" );
 				}
-				if ( _commandLineArgs.Path.Length != 0 )
+				if ( _commandLineArgs.InstancePath.Length != 0 )
 				{
-					ApplicationLog.BaseLog.Info( "Full path pre-selected: '" + _commandLineArgs.Path + "'" );
+					ApplicationLog.BaseLog.Info( "Full path pre-selected: '" + _commandLineArgs.InstancePath + "'" );
 				}
 				if ( _commandLineArgs.RestartOnCrash )
 				{
@@ -246,6 +247,7 @@ namespace SEModAPIExtensions.API
 				{
 					ApplicationLog.BaseLog.Info( "World Request Replace: Enabled" );
 				}
+                ApplicationLog.BaseLog.Info("end parsing");
 			}
 			catch ( Exception ex )
 			{
@@ -354,20 +356,20 @@ namespace SEModAPIExtensions.API
 		{
 			get
 			{
-				string path = _commandLineArgs.Path;
+				string path = _commandLineArgs.InstancePath;
 				if ( string.IsNullOrEmpty( path ) )
 				{
 					if ( InstanceName.Length != 0 )
 					{
-						SandboxGameAssemblyWrapper.UseCommonProgramData = true;
-						SandboxGameAssemblyWrapper.Instance.InitMyFileSystem( InstanceName, false );
+						ExtenderOptions.UseCommonProgramData = true;
+						FileSystem.InitMyFileSystem( InstanceName, false );
 					}
-					path = _gameAssemblyWrapper.GetUserDataPath( InstanceName );
+					path = FileSystem.GetUserDataPath( InstanceName );
 				}
 
 				return path;
 			}
-			set { _commandLineArgs.Path = value; }
+			set { _commandLineArgs.InstancePath = value; }
 		}
 
 		[IgnoreDataMember]
@@ -419,13 +421,16 @@ namespace SEModAPIExtensions.API
 
 			if ( !_pluginManager.Initialized && !_pluginManager.Loaded )
 			{
-				if ( SandboxGameAssemblyWrapper.Instance.IsGameStarted )
+				if ( MySandboxGameWrapper.IsGameStarted )
 				{
 					if ( CommandLineArgs.WorldRequestReplace )
 						ServerNetworkManager.Instance.ReplaceWorldJoin( );
 
 					if ( CommandLineArgs.WorldDataModify )
 						ServerNetworkManager.Instance.ReplaceWorldData( );
+
+                    if (CommandLineArgs.WorldVoxelModify)
+                        ServerNetworkManager.WorldVoxelModify = true;
 
 					//SandboxGameAssemblyWrapper.InitAPIGateway();
 					_pluginManager.LoadPlugins( );
@@ -486,9 +491,9 @@ namespace SEModAPIExtensions.API
 
 			try
 			{
-				SandboxGameAssemblyWrapper.InstanceName = InstanceName;
-				_serverWrapper = ServerAssemblyWrapper.Instance;
-				bool result = _serverWrapper.StartServer( _commandLineArgs.InstanceName, _commandLineArgs.Path, !_commandLineArgs.NoConsole );
+				ExtenderOptions.InstanceName = InstanceName;
+				_dedicatedServerWrapper = DedicatedServerAssemblyWrapper.Instance;
+				bool result = _dedicatedServerWrapper.StartServer( _commandLineArgs.InstanceName, _commandLineArgs.InstancePath, !_commandLineArgs.NoConsole );
 				ApplicationLog.BaseLog.Info( "Server has stopped running" );
 
 				_isServerRunning = false;
@@ -543,7 +548,7 @@ namespace SEModAPIExtensions.API
 			}
 			finally
 			{
-				_serverWrapper = null;
+				_dedicatedServerWrapper = null;
 			}
 		}
 
@@ -558,6 +563,12 @@ namespace SEModAPIExtensions.API
 
 				if ( _dedicatedConfigDefinition == null )
 					LoadServerConfig( );
+
+				if ( Config.AutoSave )
+				{
+					Config.AutoSave = false;
+					SaveServerConfig( );
+				}
 
 				_sessionManager.UpdateSessionSettings( );
 				_pluginMainLoop.Start( );
@@ -579,14 +590,14 @@ namespace SEModAPIExtensions.API
 		public void StopServer( )
 		{
 			ApplicationLog.BaseLog.Info( "Stopping server" );
-			SandboxGameAssemblyWrapper.Instance.ExitGame( );
+			MySandboxGame.Static.Exit(  );
 
 			_pluginMainLoop.Stop( );
 			_autosaveTimer.Stop( );
 			_pluginManager.Shutdown( );
 
 			//_runServerThread.Interrupt();
-			//_serverWrapper.StopServer();
+			//_dedicatedServerWrapper.StopServer();
 			//_runServerThread.Abort();
 			_runServerThread.Interrupt( );
 
@@ -595,7 +606,7 @@ namespace SEModAPIExtensions.API
 			ApplicationLog.BaseLog.Info(  "Server has been stopped" );
 		}
 
-		public MyConfigDedicatedData LoadServerConfig( )
+		public MyConfigDedicatedData<MyObjectBuilder_SessionSettings> LoadServerConfig( )
 		{
 			if ( File.Exists( System.IO.Path.Combine(Path,"SpaceEngineers-Dedicated.cfg.restart") ) )
 			{
@@ -605,7 +616,7 @@ namespace SEModAPIExtensions.API
 
 			if ( File.Exists( System.IO.Path.Combine( Path,"SpaceEngineers-Dedicated.cfg" ) ) )
 			{
-				MyConfigDedicatedData config = DedicatedConfigDefinition.Load( new FileInfo( System.IO.Path.Combine( Path, "SpaceEngineers-Dedicated.cfg" ) ) );
+				MyConfigDedicatedData<MyObjectBuilder_SessionSettings> config = DedicatedConfigDefinition.Load( new FileInfo( System.IO.Path.Combine( Path, "SpaceEngineers-Dedicated.cfg" ) ) );
 				_dedicatedConfigDefinition = new DedicatedConfigDefinition( config );
 				_cfgWatch = new FileSystemWatcher( Path, "*.cfg" );
 				_cfgWatch.Changed += Config_Changed;
@@ -656,15 +667,15 @@ namespace SEModAPIExtensions.API
 					{
 						ApplicationLog.BaseLog.Info( "SpaceEngineers-Dedicated.cfg has changed updating configuration settings." );
 
-						MyConfigDedicatedData changedConfig = DedicatedConfigDefinition.Load( new FileInfo( e.FullPath ) );
+						MyConfigDedicatedData<MyObjectBuilder_SessionSettings> changedConfig = DedicatedConfigDefinition.Load( new FileInfo( e.FullPath ) );
 						Config = new DedicatedConfigDefinition( changedConfig );
 					}
 					else
 					{
 						ApplicationLog.BaseLog.Info( "SpaceEngineers-Dedicated.cfg has changed with existing restart file." );
 
-						MyConfigDedicatedData restartConfig = DedicatedConfigDefinition.Load( new FileInfo( Path + @"\SpaceEngineers-Dedicated.cfg.restart" ) );
-						MyConfigDedicatedData changedConfig = DedicatedConfigDefinition.Load( new FileInfo( e.FullPath ) );
+						MyConfigDedicatedData<MyObjectBuilder_SessionSettings> restartConfig = DedicatedConfigDefinition.Load( new FileInfo( Path + @"\SpaceEngineers-Dedicated.cfg.restart" ) );
+						MyConfigDedicatedData<MyObjectBuilder_SessionSettings> changedConfig = DedicatedConfigDefinition.Load( new FileInfo( e.FullPath ) );
 
 						restartConfig.Mods = restartConfig.Mods.Union( changedConfig.Mods ).ToList( );
 						restartConfig.Banned = changedConfig.Banned.Union( changedConfig.Banned ).ToList( );

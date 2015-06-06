@@ -4,6 +4,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
 	using Sandbox.Common.ObjectBuilders;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
@@ -12,10 +13,10 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	{
 		#region "Attributes"
 
-		public static string MergeBlockNamespace = "";
-		public static string MergeBlockClass = "=YK6jgjDtIbOqkG0PSaYK8OgDCm=";
+		public static string MergeBlockNamespace = "Sandbox.Game.Entities.Blocks";
+		public static string MergeBlockClass = "MyShipMergeBlock";
 
-		public static string MergeBlockConnectedMergeBlockField = "=lx8f0RXA6W8t7SqmCKW5zoCHpf=";
+		public static string MergeBlockConnectedMergeBlockField = "m_other";
 
 		#endregion "Attributes"
 
@@ -131,7 +132,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				if ( type == null )
 					throw new Exception( "Could not find internal type for MergeBlockEntity" );
 
-				result &= HasField( type, MergeBlockConnectedMergeBlockField );
+				result &= Reflection.HasField( type, MergeBlockConnectedMergeBlockField );
 
 				return result;
 			}

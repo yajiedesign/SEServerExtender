@@ -4,8 +4,10 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
 	using System.Text;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
 	using Sandbox.ModAPI.Ingame;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
@@ -105,8 +107,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalSetCustomName;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalSetCustomName );
 				}
 			}
 		}
@@ -123,9 +124,9 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				if ( type == null )
 					throw new Exception( "Could not find internal type for TerminalBlockEntity" );
 				bool result = true;
-				result &= HasMethod( type, TerminalBlockGetCustomNameMethod );
-				result &= HasMethod( type, TerminalBlockSetCustomNameMethod );
-				result &= HasMethod( type, TerminalBlockBroadcastCustomNameMethod );
+				result &= Reflection.HasMethod( type, TerminalBlockGetCustomNameMethod );
+				result &= Reflection.HasMethod( type, TerminalBlockSetCustomNameMethod );
+				result &= Reflection.HasMethod( type, TerminalBlockBroadcastCustomNameMethod );
 
 				return result;
 			}

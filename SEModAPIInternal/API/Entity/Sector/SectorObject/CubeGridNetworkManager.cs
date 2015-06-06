@@ -2,13 +2,15 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 {
 	using System;
 	using System.Collections.Generic;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
 	using Sandbox.Definitions;
 	using Sandbox.ModAPI;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid;
 	using SEModAPIInternal.Support;
-	using VRage;
+	using VRage.Library.Utils;
 	using VRageMath;
 
 	public class CubeGridNetworkManager
@@ -65,9 +67,9 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 		public static string CubeGridGetNetManagerMethod = "get_SyncObject";
 
 		//Definition
-		public static string CubeGridNetManagerNamespace = "";
+		public static string CubeGridNetManagerNamespace = "Sandbox.Game.Multiplayer";
 
-		public static string CubeGridNetManagerClass = "=zoXj9sAM1q8S0PhlB3s4jkZF7e=";
+		public static string CubeGridNetManagerClass = "MySyncGrid";
 
 		//Methods
 		public static string CubeGridNetManagerBroadcastCubeBlockBuildIntegrityValuesMethod = "SendIntegrityChanged";
@@ -77,11 +79,11 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 		public static string CubeGridNetManagerBroadcastAddCubeBlockMethod = "BuildBlocksSuccess";
 
 		//Fields
-		public static string CubeGridNetManagerCubeBlocksToDestroyField = "=XbM83NQKvFOEEzrVYjD6oxsh7d=";
+		public static string CubeGridNetManagerCubeBlocksToDestroyField = "m_destroyBlockQueue";
 
 		//////////////////////////////////////////////////////////////////
 
-		public static string CubeGridIntegrityChangeEnumNamespace = CubeGridEntity.CubeGridNamespace + "." + CubeGridEntity.CubeGridClass;
+		public static string CubeGridIntegrityChangeEnumNamespace = string.Format( "{0}.{1}", CubeGridEntity.CubeGridNamespace, CubeGridEntity.CubeGridClass );
 		public static string CubeGridIntegrityChangeEnumClass = "MyIntegrityChangeEnum";
 
 		#endregion "Attributes"
@@ -94,8 +96,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 			object entity = m_cubeGrid.BackingObject;
 			m_netManager = BaseObject.InvokeEntityMethod( entity, CubeGridGetNetManagerMethod );
 
-			Action action = RegisterPacketHandlers;
-			SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+			MySandboxGame.Static.Invoke( RegisterPacketHandlers );
 		}
 
 		#endregion "Constructors and Initializers"
@@ -127,11 +128,11 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 				if ( type == null )
 					throw new Exception( "Could not find internal type for CubeGridNetworkManager" );
 				bool result = true;
-				result &= BaseObject.HasMethod( type, CubeGridNetManagerBroadcastCubeBlockBuildIntegrityValuesMethod );
-				result &= BaseObject.HasMethod( type, CubeGridNetManagerBroadcastCubeBlockFactionDataMethod );
-				result &= BaseObject.HasMethod( type, CubeGridNetManagerBroadcastCubeBlockRemoveListsMethod );
-				result &= BaseObject.HasMethod( type, CubeGridNetManagerBroadcastAddCubeBlockMethod );
-				result &= BaseObject.HasField( type, CubeGridNetManagerCubeBlocksToDestroyField );
+				result &= Reflection.HasMethod( type, CubeGridNetManagerBroadcastCubeBlockBuildIntegrityValuesMethod );
+				result &= Reflection.HasMethod( type, CubeGridNetManagerBroadcastCubeBlockFactionDataMethod );
+				result &= Reflection.HasMethod( type, CubeGridNetManagerBroadcastCubeBlockRemoveListsMethod );
+				result &= Reflection.HasMethod( type, CubeGridNetManagerBroadcastAddCubeBlockMethod );
+				result &= Reflection.HasField( type, CubeGridNetManagerCubeBlocksToDestroyField );
 
 				Type type2 = CubeGridEntity.InternalType.GetNestedType( CubeGridIntegrityChangeEnumClass );
 				if ( type2 == null )

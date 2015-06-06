@@ -3,8 +3,8 @@ namespace SEModAPIExtensions.API
 	using System;
 	using System.IO;
 	using Sandbox.Common.ObjectBuilders;
-	using Sandbox.Common.ObjectBuilders.Serializer;
 	using SEModAPIInternal.Support;
+	using VRage.ObjectBuilders;
 
 	public class SessionManager
 	{
@@ -49,7 +49,7 @@ namespace SEModAPIExtensions.API
 
 		public void UpdateSessionSettings( )
 		{
-			MyConfigDedicatedData config = Server.Instance.LoadServerConfig();
+			MyConfigDedicatedData<MyObjectBuilder_SessionSettings> config = Server.Instance.LoadServerConfig( );
 
 			ApplicationLog.BaseLog.Info( "Loading Session Settings" );
 			try

@@ -4,6 +4,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
 	using Sandbox.Common.ObjectBuilders;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
@@ -14,8 +15,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 		private RadioManager m_radioManager;
 
-		public static string AntennaNamespace = "";
-		public static string AntennaClass = "=Jaud2hDz8fLVTEpqsW3FMuLjLj=";
+		public static string AntennaNamespace = "Sandbox.Game.Entities.Cube";
+		public static string AntennaClass = "MyRadioAntenna";
 
 		public static string AntennaGetRadioManagerMethod = "get_RadioBroadcaster";
 
@@ -103,7 +104,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				Type type = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( AntennaNamespace, AntennaClass );
 				if ( type == null )
 					throw new Exception( "Could not find internal type for AntennaEntity" );
-				result &= HasMethod( type, AntennaGetRadioManagerMethod );
+				result &= Reflection.HasMethod( type, AntennaGetRadioManagerMethod );
 
 				return result;
 			}

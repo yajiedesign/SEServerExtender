@@ -2,6 +2,8 @@ namespace SEModAPIInternal.API.Entity
 {
 	using System;
 	using System.ComponentModel;
+	using Sandbox;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
@@ -16,9 +18,9 @@ namespace SEModAPIInternal.API.Entity
 		private Func<float> m_powerRateCallback;
 
 		//Power Receiver Type
-		public static string PowerReceiverNamespace = "";
+		public static string PowerReceiverNamespace = "Sandbox.Game.GameSystems.Electricity";
 
-		public static string PowerReceiverClass = "=babgJs9QqKNc4MkX8NUlXXlEdH=";
+		public static string PowerReceiverClass = "MyPowerReceiver";
 
 		//Power Receiver Methods
 		public static string PowerReceiverRunPowerRateCallbackMethod = "Update";
@@ -28,17 +30,17 @@ namespace SEModAPIInternal.API.Entity
 		public static string PowerReceiverSetMaxRequiredInputMethod = "set_RequiredInput";
 
 		//Power Receiver Fields
-		public static string PowerReceiverMaxRequiredInputField = "=DQnFVF8DDXIHnCWpuaPGltdbq6g=";
+		public static string PowerReceiverMaxRequiredInputField = "MaxRequiredInput";
 
-		public static string PowerReceiverPowerRatioField = "=YFDFLyRS3s03wJ0SpppayhlNLH=";
-		public static string PowerReceiverInputRateCallbackField = "=h6hWnoHwe9fvx7FWapN4KPGeTR=";
+		public static string PowerReceiverPowerRatioField = "<SuppliedRatio>k__BackingField";
+		public static string PowerReceiverInputRateCallbackField = "m_requiredInputFunc";
 
 		////////////////////////////////////////////////////////////////////
 
 		//3 - Door, 4 - Gravity Generator, 5 - Battery, 8 - BatteryBlock
-		public static string PowerReceiverTypeEnumNamespace = "";
+		public static string PowerReceiverTypeEnumNamespace = "Sandbox.Game.GameSystems.Electricity";
 
-		public static string PowerReceiverTypeEnumClass = "Sandbox.Game.GameSystems.Electricity.MyConsumerGroupEnum";
+		public static string PowerReceiverTypeEnumClass = "MyConsumerGroupEnum";
 
 		#endregion "Attributes"
 
@@ -84,8 +86,7 @@ namespace SEModAPIInternal.API.Entity
 					return;
 				m_maxRequiredInput = value;
 
-				Action action = InternalUpdateMaxRequiredInput;
-				SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+				MySandboxGame.Static.Invoke( InternalUpdateMaxRequiredInput );
 			}
 		}
 
@@ -114,13 +115,13 @@ namespace SEModAPIInternal.API.Entity
 				if ( type1 == null )
 					throw new Exception( "Could not find internal type for PowerReceiver" );
 				bool result = true;
-				result &= BaseObject.HasMethod( type1, PowerReceiverRunPowerRateCallbackMethod );
-				result &= BaseObject.HasMethod( type1, PowerReceiverGetCurrentInputMethod );
-				result &= BaseObject.HasMethod( type1, PowerReceiverGetCurrentRateMethod );
-				result &= BaseObject.HasMethod( type1, PowerReceiverSetMaxRequiredInputMethod );
-				result &= BaseObject.HasField( type1, PowerReceiverMaxRequiredInputField );
-				result &= BaseObject.HasField( type1, PowerReceiverPowerRatioField );
-				result &= BaseObject.HasField( type1, PowerReceiverInputRateCallbackField );
+				result &= Reflection.HasMethod( type1, PowerReceiverRunPowerRateCallbackMethod );
+				result &= Reflection.HasMethod( type1, PowerReceiverGetCurrentInputMethod );
+				result &= Reflection.HasMethod( type1, PowerReceiverGetCurrentRateMethod );
+				result &= Reflection.HasMethod( type1, PowerReceiverSetMaxRequiredInputMethod );
+				result &= Reflection.HasField( type1, PowerReceiverMaxRequiredInputField );
+				result &= Reflection.HasField( type1, PowerReceiverPowerRatioField );
+				result &= Reflection.HasField( type1, PowerReceiverInputRateCallbackField );
 
 				return result;
 			}

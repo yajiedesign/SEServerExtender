@@ -3,7 +3,9 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System;
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
@@ -12,8 +14,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	{
 		#region "Attributes"
 
-		public static string GravitySphereNamespace = "";
-		public static string GravitySphereClass = "=H4poEFhzHwlXDXKvslKQChDub8=";
+		public static string GravitySphereNamespace = "Sandbox.Game.Entities";
+		public static string GravitySphereClass = "MyGravityGeneratorSphere";
 
 		public static string GravitySphereSetFieldRadiusMethod = "set_Radius";
 
@@ -66,8 +68,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateFieldRadius;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateFieldRadius );
 				}
 			}
 		}
@@ -85,7 +86,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				Type type = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( GravitySphereNamespace, GravitySphereClass );
 				if ( type == null )
 					throw new Exception( "Could not find internal type for GravitySphereEntity" );
-				result &= HasMethod( type, GravitySphereSetFieldRadiusMethod );
+				result &= Reflection.HasMethod( type, GravitySphereSetFieldRadiusMethod );
 
 				return result;
 			}

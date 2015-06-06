@@ -2,11 +2,15 @@ namespace SEModAPIExtensions.API
 {
 	using System;
 	using System.Collections.Generic;
+	using System.Globalization;
 	using System.IO;
 	using System.Linq;
 	using System.Reflection;
 	using System.Runtime.InteropServices;
 	using System.Threading;
+	using Sandbox;
+	using SEModAPI.API;
+	using SEModAPI.API.Sandbox;
 	using SEModAPIExtensions.API.Plugin;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid;
@@ -14,36 +18,36 @@ namespace SEModAPIExtensions.API
 
 	public class PluginManager
 	{
-		private static PluginManager m_instance;
+		private static PluginManager _instance;
 
-		private readonly Dictionary<Guid, Assembly> m_pluginAssemblies;
-		private DateTime m_lastUpdate;
-		private TimeSpan m_lastUpdateTime;
-		private double m_averageUpdateInterval;
-		private double m_averageUpdateTime;
-		private DateTime m_lastAverageOutput;
-		private double m_averageEvents;
-		private List<ulong> m_lastConnectedPlayerList;
-		private readonly Dictionary<Guid, String> m_pluginPaths;
+		private readonly Dictionary<Guid, Assembly> _pluginAssemblies;
+		private DateTime _lastUpdate;
+		private TimeSpan _lastUpdateTime;
+		private double _averageUpdateInterval;
+		private double _averageUpdateTime;
+		private DateTime _lastAverageOutput;
+		private double _averageEvents;
+		private List<ulong> _lastConnectedPlayerList;
+		private readonly Dictionary<Guid, string> _pluginPaths;
 
 		#region "Constructors and Initializers"
 
 		protected PluginManager( )
 		{
-			m_instance = this;
+			_instance = this;
 
 			Plugins = new Dictionary<Guid, IPlugin>( );
 			PluginStates = new Dictionary<Guid, bool>( );
-			m_pluginAssemblies = new Dictionary<Guid, Assembly>( );
+			_pluginAssemblies = new Dictionary<Guid, Assembly>( );
 			Initialized = false;
-			m_lastUpdate = DateTime.Now;
-			m_lastUpdateTime = DateTime.Now - m_lastUpdate;
-			m_averageUpdateInterval = 0;
-			m_averageUpdateTime = 0;
-			m_lastAverageOutput = DateTime.Now;
-			m_averageEvents = 0;
-			m_lastConnectedPlayerList = new List<ulong>( );
-			m_pluginPaths = new Dictionary<Guid, string>( );
+			_lastUpdate = DateTime.Now;
+			_lastUpdateTime = DateTime.Now - _lastUpdate;
+			_averageUpdateInterval = 0;
+			_averageUpdateTime = 0;
+			_lastAverageOutput = DateTime.Now;
+			_averageEvents = 0;
+			_lastConnectedPlayerList = new List<ulong>( );
+			_pluginPaths = new Dictionary<Guid, string>( );
 
 			ApplicationLog.BaseLog.Info( "Finished loading PluginManager" );
 		}
@@ -54,7 +58,7 @@ namespace SEModAPIExtensions.API
 
 		public static PluginManager Instance
 		{
-			get { return m_instance ?? ( m_instance = new PluginManager( ) ); }
+			get { return _instance ?? ( _instance = new PluginManager( ) ); }
 		}
 
 		public bool Loaded { get; private set; }
@@ -86,84 +90,75 @@ namespace SEModAPIExtensions.API
 				if ( !Directory.Exists( modsPath ) )
 					return;
 
-				string[ ] subDirectories = Directory.GetDirectories( modsPath );
-				foreach ( string path in subDirectories )
+				string[ ] files = Directory.GetFiles( modsPath, "*.dll", SearchOption.AllDirectories );
+				foreach ( string file in files )
 				{
-					string[ ] files = Directory.GetFiles( path );
-					foreach ( string file in files )
+
+					try
 					{
-						try
+						// Load assembly from file into memory, so we can hotswap it if we want
+						byte[ ] b = File.ReadAllBytes( file );
+						Assembly pluginAssembly = Assembly.Load( b );
+						if ( IsOldPlugin( pluginAssembly ) )
 						{
-							FileInfo fileInfo = new FileInfo( file );
-							if ( !fileInfo.Extension.ToLower( ).Equals( ".dll" ) )
+							if ( IsValidPlugin( pluginAssembly ) )
+								pluginAssembly = Assembly.UnsafeLoadFrom( file );
+							else
 								continue;
+						}
 
-							// Load assembly from file into memory, so we can hotswap it if we want
-							byte[ ] b = File.ReadAllBytes( file );
-							Assembly pluginAssembly = Assembly.Load( b );
-							if ( IsOldPlugin( pluginAssembly ) )
+						//Get the assembly GUID
+						GuidAttribute guid = (GuidAttribute)pluginAssembly.GetCustomAttributes( typeof( GuidAttribute ), true )[ 0 ];
+						Guid guidValue = new Guid( guid.Value );
+
+						if ( _pluginPaths.ContainsKey( guidValue ) )
+							_pluginPaths[ guidValue ] = file;
+						else
+							_pluginPaths.Add( guidValue, file );
+
+						if ( _pluginAssemblies.ContainsKey( guidValue ) )
+							_pluginAssemblies[ guidValue ] = pluginAssembly;
+						else
+							_pluginAssemblies.Add( guidValue, pluginAssembly );
+
+						//Look through the exported types to find the one that implements PluginBase
+						Type[ ] types = pluginAssembly.GetExportedTypes( );
+						foreach ( Type type in types )
+						{
+							//Check that we don't have an entry already for this GUID
+							if ( Plugins.ContainsKey( guidValue ) )
+								break;
+
+							//if (type.BaseType == null)
+							//                                    continue;
+
+							//Type[] filteredTypes = type.BaseType.GetInterfaces();
+							Type[ ] filteredTypes = type.GetInterfaces( );
+							foreach ( Type interfaceType in filteredTypes )
 							{
-								if ( IsValidPlugin( pluginAssembly ) )
-									pluginAssembly = Assembly.UnsafeLoadFrom( file );
-								else
-									continue;
-							}
-
-							//Get the assembly GUID
-							GuidAttribute guid = (GuidAttribute)pluginAssembly.GetCustomAttributes( typeof( GuidAttribute ), true )[ 0 ];
-							Guid guidValue = new Guid( guid.Value );
-
-							if ( m_pluginPaths.ContainsKey( guidValue ) )
-								m_pluginPaths[ guidValue ] = file;
-							else
-								m_pluginPaths.Add( guidValue, file );
-
-							if ( m_pluginAssemblies.ContainsKey( guidValue ) )
-								m_pluginAssemblies[ guidValue ] = pluginAssembly;
-							else
-								m_pluginAssemblies.Add( guidValue, pluginAssembly );
-
-							//Look through the exported types to find the one that implements PluginBase
-							Type[ ] types = pluginAssembly.GetExportedTypes( );
-							foreach ( Type type in types )
-							{
-								//Check that we don't have an entry already for this GUID
-								if ( Plugins.ContainsKey( guidValue ) )
-									break;
-
-								//if (type.BaseType == null)
-								//                                    continue;
-
-								//Type[] filteredTypes = type.BaseType.GetInterfaces();
-								Type[ ] filteredTypes = type.GetInterfaces( );
-								foreach ( Type interfaceType in filteredTypes )
+								if ( interfaceType.Name == typeof( IPlugin ).Name )
 								{
-									if ( interfaceType.Name == typeof( IPlugin ).Name )
+									try
 									{
-										try
-										{
-											//Create an instance of the plugin object
-											IPlugin pluginObject = (IPlugin)Activator.CreateInstance( type );
+										//Create an instance of the plugin object
+										IPlugin pluginObject = (IPlugin)Activator.CreateInstance( type );
 
-											//And add it to the dictionary
-											Plugins.Add( guidValue, pluginObject );
+										//And add it to the dictionary
+										Plugins.Add( guidValue, pluginObject );
 
-											break;
-										}
-										catch ( Exception ex )
-										{
-											ApplicationLog.BaseLog.Error( ex );
-										}
+										break;
+									}
+									catch ( Exception ex )
+									{
+										ApplicationLog.BaseLog.Error( ex );
 									}
 								}
 							}
-
-							break;
 						}
-						catch ( Exception ex )
-						{
-							ApplicationLog.BaseLog.Error( ex );
-						}
+					}
+					catch ( Exception ex )
+					{
+						ApplicationLog.BaseLog.Error( ex );
 					}
 				}
 			}
@@ -204,7 +199,7 @@ namespace SEModAPIExtensions.API
 		{
 			Type[ ] types = assembly.GetExportedTypes( );
 
-			return types.Any( type => type.GetInterface( typeof ( IPlugin ).FullName ) != null );
+			return types.Any( type => type.GetInterface( typeof( IPlugin ).FullName ) != null );
 		}
 
 		public void Init( )
@@ -226,12 +221,12 @@ namespace SEModAPIExtensions.API
 				return;
 			if ( !Initialized )
 				return;
-			if ( !SandboxGameAssemblyWrapper.Instance.IsGameStarted )
+			if ( !MySandboxGameWrapper.IsGameStarted )
 				return;
 
-			m_lastUpdateTime = DateTime.Now - m_lastUpdate;
-			m_averageUpdateInterval = ( m_averageUpdateTime + m_lastUpdateTime.TotalMilliseconds ) / 2;
-			m_lastUpdate = DateTime.Now;
+			_lastUpdateTime = DateTime.Now - _lastUpdate;
+			_averageUpdateInterval = ( _averageUpdateTime + _lastUpdateTime.TotalMilliseconds ) / 2;
+			_lastUpdate = DateTime.Now;
 
 			EntityEventManager.Instance.ResourceLocked = true;
 
@@ -244,31 +239,31 @@ namespace SEModAPIExtensions.API
 			{
 				foreach ( ulong steamId in connectedPlayers )
 				{
-					if ( !m_lastConnectedPlayerList.Contains( steamId ) )
+					if ( !_lastConnectedPlayerList.Contains( steamId ) )
 					{
 						EntityEventManager.EntityEvent playerEvent = new EntityEventManager.EntityEvent
-						                                             {
-							                                             priority = 1,
-							                                             timestamp = DateTime.Now,
-							                                             type = EntityEventManager.EntityEventType.OnPlayerJoined,
-							                                             entity = steamId
-						                                             };
+																	 {
+																		 priority = 1,
+																		 timestamp = DateTime.Now,
+																		 type = EntityEventManager.EntityEventType.OnPlayerJoined,
+																		 entity = steamId
+																	 };
 						//TODO - Find a way to stall the event long enough for a linked character entity to exist - this is impossible because of cockpits and respawnships
 						//For now, create a dummy entity just for passing the player's steam id along
 						events.Add( playerEvent );
 					}
 				}
-				foreach ( ulong steamId in m_lastConnectedPlayerList )
+				foreach ( ulong steamId in _lastConnectedPlayerList )
 				{
 					if ( !connectedPlayers.Contains( steamId ) )
 					{
 						EntityEventManager.EntityEvent playerEvent = new EntityEventManager.EntityEvent
-						                                             {
-							                                             priority = 1,
-							                                             timestamp = DateTime.Now,
-							                                             type = EntityEventManager.EntityEventType.OnPlayerLeft,
-							                                             entity = steamId
-						                                             };
+																	 {
+																		 priority = 1,
+																		 timestamp = DateTime.Now,
+																		 type = EntityEventManager.EntityEventType.OnPlayerLeft,
+																		 entity = steamId
+																	 };
 						//TODO - Find a way to stall the event long enough for a linked character entity to exist - this is impossible because of cockpits and respawnships
 						//For now, create a dummy entity just for passing the player's steam id along
 						events.Add( playerEvent );
@@ -277,9 +272,9 @@ namespace SEModAPIExtensions.API
 			}
 			catch ( Exception ex )
 			{
-				ApplicationLog.BaseLog.Info( "PluginManager.Update() Exception in player discovery: {0}", ex );
+				ApplicationLog.BaseLog.Error( ex );
 			}
-			m_lastConnectedPlayerList = new List<ulong>( connectedPlayers );
+			_lastConnectedPlayerList = new List<ulong>( connectedPlayers );
 
 			//Run the update threads on the plugins
 			foreach ( Guid key in Plugins.Keys )
@@ -290,14 +285,14 @@ namespace SEModAPIExtensions.API
 					continue;
 
 				PluginManagerThreadParams parameters = new PluginManagerThreadParams
-				                                       {
-					                                       Plugin = plugin,
-					                                       Key = key,
-					                                       Plugins = Plugins,
-					                                       PluginState = PluginStates,
-					                                       Events = new List<EntityEventManager.EntityEvent>( events ),
-					                                       ChatEvents = new List<ChatManager.ChatEvent>( chatEvents )
-				                                       };
+													   {
+														   Plugin = plugin,
+														   Key = key,
+														   Plugins = Plugins,
+														   PluginState = PluginStates,
+														   Events = new List<EntityEventManager.EntityEvent>( events ),
+														   ChatEvents = new List<ChatManager.ChatEvent>( chatEvents )
+													   };
 
 				ThreadPool.QueueUserWorkItem( DoUpdate, parameters );
 				//				Thread pluginThread = new Thread(DoUpdate);
@@ -305,21 +300,21 @@ namespace SEModAPIExtensions.API
 			}
 
 			//Capture profiling info if debugging is on
-			if ( SandboxGameAssemblyWrapper.IsDebugging )
+			if ( ExtenderOptions.IsDebugging )
 			{
-				m_averageEvents = ( m_averageEvents + ( events.Count + chatEvents.Count ) ) / 2;
+				_averageEvents = ( _averageEvents + ( events.Count + chatEvents.Count ) ) / 2;
 
-				TimeSpan updateTime = DateTime.Now - m_lastUpdate;
-				m_averageUpdateTime = ( m_averageUpdateTime + updateTime.TotalMilliseconds ) / 2;
+				TimeSpan updateTime = DateTime.Now - _lastUpdate;
+				_averageUpdateTime = ( _averageUpdateTime + updateTime.TotalMilliseconds ) / 2;
 
-				TimeSpan timeSinceAverageOutput = DateTime.Now - m_lastAverageOutput;
+				TimeSpan timeSinceAverageOutput = DateTime.Now - _lastAverageOutput;
 				if ( timeSinceAverageOutput.TotalSeconds > 30 )
 				{
-					m_lastAverageOutput = DateTime.Now;
+					_lastAverageOutput = DateTime.Now;
 
-					ApplicationLog.BaseLog.Debug( "PluginManager - Update interval = {0}ms", m_averageUpdateInterval );
-					ApplicationLog.BaseLog.Debug( "PluginManager - Update time = {0}ms", m_averageUpdateTime );
-					ApplicationLog.BaseLog.Debug( "PluginManager - Events per update = {0}", m_averageEvents );
+					ApplicationLog.BaseLog.Debug( "PluginManager - Update interval = {0}ms", _averageUpdateInterval );
+					ApplicationLog.BaseLog.Debug( "PluginManager - Update time = {0}ms", _averageUpdateTime );
+					ApplicationLog.BaseLog.Debug( "PluginManager - Events per update = {0}", _averageEvents );
 				}
 			}
 
@@ -498,12 +493,17 @@ namespace SEModAPIExtensions.API
 			if ( PluginStates.ContainsKey( key ) )
 				return;
 
-			String pluginPath = m_pluginPaths[ key ];
+			String pluginPath = _pluginPaths[ key ];
 			ApplicationLog.BaseLog.Info( "Initializing plugin at {0} - {1}'", pluginPath, key );
 
 			try
 			{
 				object plugin = Plugins[ key ];
+				FieldInfo logField = plugin.GetType( ).GetField( "Log" );
+				if ( logField != null )
+				{
+					logField.SetValue( plugin, ApplicationLog.PluginLog, BindingFlags.Static, null, CultureInfo.CurrentCulture );
+				}
 				MethodInfo initMethod = plugin.GetType( ).GetMethod( "InitWithPath" );
 				if ( initMethod != null )
 				{
@@ -546,7 +546,7 @@ namespace SEModAPIExtensions.API
 				ApplicationLog.BaseLog.Error( ex );
 			}
 
-			m_pluginAssemblies.Remove( key );
+			_pluginAssemblies.Remove( key );
 			PluginStates.Remove( key );
 			Plugins.Remove( key );
 		}

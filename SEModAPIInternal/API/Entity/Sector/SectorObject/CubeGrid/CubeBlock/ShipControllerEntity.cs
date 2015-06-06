@@ -3,7 +3,9 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System;
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
@@ -16,8 +18,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 		private CharacterEntity m_pilot;
 		private bool m_weaponStatus;
 
-		public static string ShipControllerEntityNamespace = "";
-		public static string ShipControllerEntityClass = "=7h87qJfPTuhTWq2FGYlI84qCpg=";
+		public static string ShipControllerEntityNamespace = "Sandbox.Game.Entities";
+		public static string ShipControllerEntityClass = "MyShipController";
 
 		public static string ShipControllerEntityGetNetworkManager = "get_SyncObject";
 
@@ -171,7 +173,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 					if (BackingObject != null && ActualObject != null)
 					{
 						Action action = InternalUpdatePilotEntity;
-						SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction(action);
+						MySandboxGame.Static.Invoke(action);
 					}
 				}
 			}
@@ -200,7 +202,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				if ( type == null )
 					throw new Exception( "Could not find type for ShipControllerEntity" );
 
-				result &= HasMethod( type, ShipControllerEntityGetNetworkManager );
+				result &= Reflection.HasMethod( type, ShipControllerEntityGetNetworkManager );
 				//				result &= BaseObject.HasMethod(type, ShipControllerEntityGetPilotEntityMethod);
 				//				result &= BaseObject.HasMethod(type, ShipControllerEntitySetPilotEntityMethod);
 
@@ -254,8 +256,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 		//2488 - Thruster Power On/Off
 		//2489 - Motor Handbrake On/Off
 
-		public static string ShipControllerNetworkManagerNamespace = "";
-		public static string ShipControllerNetworkManagerClass = "=YTP9oWvasPaCXTYBL8uGXhRmd2=";
+		public static string ShipControllerNetworkManagerNamespace = "Sandbox.Game.Multiplayer";
+		public static string ShipControllerNetworkManagerClass = "MySyncShipController";
 
 		public static string ShipControllerNetworkManagerBroadcastDampenersStatus = "SendDampenersUpdate";
 
@@ -268,8 +270,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 			m_networkManager = networkManager;
 			m_parent = parent;
 
-			Action action = RegisterPacketHandlers;
-			SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+			MySandboxGame.Static.Invoke( RegisterPacketHandlers );
 		}
 
 		#endregion "Constructors and Initializers"
@@ -303,7 +304,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				if ( type == null )
 					throw new Exception( "Could not find type for ShipControllerNetworkManager" );
 
-				result &= BaseObject.HasMethod( type, ShipControllerNetworkManagerBroadcastDampenersStatus );
+				result &= Reflection.HasMethod( type, ShipControllerNetworkManagerBroadcastDampenersStatus );
 
 				return result;
 			}

@@ -3,7 +3,9 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System;
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
@@ -17,8 +19,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 		private float m_maxPowerOutput;
 		private DateTime m_lastInventoryRefresh;
 
-		public static string ReactorNamespace = "";
-		public static string ReactorClass = "=8zjCx0ti2Bhb0pNnUuSZ3jChGV=";
+		public static string ReactorNamespace = "Sandbox.Game.Entities";
+		public static string ReactorClass = "MyReactor";
 
 		public static string ReactorGetInventoryMethod = "GetInventory";
 		public static string ReactorSetMaxPowerOutputMethod = "set_MaxPowerOutput";
@@ -121,8 +123,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 			{
 				m_maxPowerOutput = value;
 
-				Action action = InternalUpdateMaxPowerOutput;
-				SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+				MySandboxGame.Static.Invoke( InternalUpdateMaxPowerOutput );
 			}
 		}
 
@@ -157,8 +158,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				Type type = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( ReactorNamespace, ReactorClass );
 				if ( type == null )
 					throw new Exception( "Could not find internal type for ReactorEntity" );
-				result &= HasMethod( type, ReactorGetInventoryMethod );
-				result &= HasMethod( type, ReactorSetMaxPowerOutputMethod );
+				result &= Reflection.HasMethod( type, ReactorGetInventoryMethod );
+				result &= Reflection.HasMethod( type, ReactorSetMaxPowerOutputMethod );
 
 				return result;
 			}

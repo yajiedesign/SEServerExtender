@@ -4,6 +4,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
 	using Sandbox.Common.ObjectBuilders;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
@@ -14,8 +15,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 		private RadioManager m_radioManager;
 
-		public static string BeaconNamespace = "";
-		public static string BeaconClass = "=TuRG2bDnpLfkPdaN8Nr22GzDoH=";
+		public static string BeaconNamespace = "Sandbox.Game.Entities.Cube";
+		public static string BeaconClass = "MyBeacon";
 
 		public static string BeaconGetRadioManagerMethod = "get_RadioBroadcaster";
 
@@ -104,7 +105,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				Type type = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( BeaconNamespace, BeaconClass );
 				if ( type == null )
 					throw new Exception( "Could not find internal type for BeaconEntity" );
-				result &= HasMethod( type, BeaconGetRadioManagerMethod );
+				result &= Reflection.HasMethod( type, BeaconGetRadioManagerMethod );
 
 				return result;
 			}

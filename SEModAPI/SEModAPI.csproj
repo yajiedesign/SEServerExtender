@@ -69,9 +69,9 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NLog, Version=3.2.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+    <Reference Include="NLog, Version=3.2.1.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NLog.3.2.0.0\lib\net40\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.3.2.1\lib\net40\NLog.dll</HintPath>
     </Reference>
     <Reference Include="Sandbox.Common">
       <SpecificVersion>False</SpecificVersion>
@@ -81,20 +81,32 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameLibraries\Sandbox.Common.XmlSerializers.dll</HintPath>
     </Reference>
+    <Reference Include="Sandbox.Game">
+      <HintPath>..\GameLibraries\Sandbox.Game.dll</HintPath>
+    </Reference>
+    <Reference Include="SpaceEngineers.Game">
+      <HintPath>..\GameLibraries\SpaceEngineers.Game.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Management" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="VRage">
+      <HintPath>..\GameLibraries\VRage.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Dedicated">
+      <HintPath>..\GameLibraries\VRage.Dedicated.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Game">
+      <HintPath>..\GameLibraries\VRage.Game.dll</HintPath>
+    </Reference>
     <Reference Include="VRage.Library">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameLibraries\VRage.Library.dll</HintPath>
@@ -106,6 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API\Definitions\ConfigFileSerializer.cs" />
+    <Compile Include="API\Definitions\CubeBlocks\AirVentDefinition.cs" />
     <Compile Include="API\Definitions\CubeBlocks\ShipDrillDefinition.cs" />
     <Compile Include="API\Definitions\DedicatedConfigDefinition.cs" />
     <Compile Include="API\Definitions\DefinitionOverLayer.cs" />
@@ -140,13 +153,18 @@
     <Compile Include="API\Definitions\CubeBlocks\CubeBlockDefinition.cs" />
     <Compile Include="API\Definitions\TransparentMaterialsDefinition.cs" />
     <Compile Include="API\Definitions\VoxelMaterialsDefinition.cs" />
+    <Compile Include="API\ExtenderOptions.cs" />
     <Compile Include="API\GameInstallation.cs" />
+    <Compile Include="API\Sandbox\MySandboxGameWrapper.cs" />
     <Compile Include="API\SEModAPIExceptions.cs" />
     <Compile Include="API\TypeConverters\Vector3Wrapper.cs" />
     <Compile Include="API\TypeConverters\Vector3DTypeConverter.cs" />
     <Compile Include="API\TypeConverters\Vector3DWrapper.cs" />
     <Compile Include="API\TypeConverters\Vector3TypeConverter.cs" />
     <Compile Include="API\TypeConverters\Vector3ITypeConverter.cs" />
+    <Compile Include="API\Utility\CommandParser.cs" />
+    <Compile Include="API\Utility\FileSystem.cs" />
+    <Compile Include="API\Utility\Reflection.cs" />
     <Compile Include="AssemblyFileVersion.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -156,15 +174,6 @@
     <Compile Include="Interop\CubeType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Support\AutoException.cs" />
-    <Compile Include="Support\NumericTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Support\NumericTextBox.resx">
-      <DependentUpon>NumericTextBox.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

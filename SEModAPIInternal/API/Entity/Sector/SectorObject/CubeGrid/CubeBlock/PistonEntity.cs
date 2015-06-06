@@ -3,7 +3,9 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System;
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
@@ -17,8 +19,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 		private float m_minLimit;
 		private float m_maxLimit;
 
-		public static string PistonNamespace = "";
-		public static string PistonClass = "=J4YBrVQFk0jMvjbPSUGFOqZOfd=";
+		public static string PistonNamespace = "Sandbox.Game.Entities.Blocks";
+		public static string PistonClass = "MyPistonBase";
 
 		public static string PistonGetVelocityMethod = "get_Velocity";
 		public static string PistonSetVelocityMethod = "set_Velocity";
@@ -28,8 +30,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 		public static string PistonSetMaxLimitMethod = "set_MaxLimit";
 		public static string PistonGetNetworkManagerMethod = "get_SyncObject";
 
-		public static string PistonTopBlockEntityIdField = "=QHgJ2u42kzi8lDx6siYzY26eT=";
-		public static string PistonCurrentPositionField = "=xY6vcuGIHueEokvIR5N2aMk5IO=";
+		public static string PistonTopBlockEntityIdField = "m_topBlockId";
+		public static string PistonCurrentPositionField = "m_currentPos";
 
 		#endregion "Attributes"
 
@@ -167,8 +169,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null && ActualObject != null )
 				{
-					Action action = SetPistonVelocity;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( SetPistonVelocity );
 				}
 			}
 		}
@@ -193,8 +194,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null && ActualObject != null )
 				{
-					Action action = SetPistonMinLimit;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( SetPistonMinLimit );
 				}
 			}
 		}
@@ -219,8 +219,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null && ActualObject != null )
 				{
-					Action action = SetPistonMaxLimit;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( SetPistonMaxLimit );
 				}
 			}
 		}
@@ -239,16 +238,16 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				if ( type == null )
 					throw new Exception( "Could not find internal type for PistonEntity" );
 
-				result &= HasMethod( type, PistonGetVelocityMethod );
-				result &= HasMethod( type, PistonSetVelocityMethod );
-				result &= HasMethod( type, PistonGetMinLimitMethod );
-				result &= HasMethod( type, PistonSetMinLimitMethod );
-				result &= HasMethod( type, PistonGetMaxLimitMethod );
-				result &= HasMethod( type, PistonSetMaxLimitMethod );
-				result &= HasMethod( type, PistonGetNetworkManagerMethod );
+				result &= Reflection.HasMethod( type, PistonGetVelocityMethod );
+				result &= Reflection.HasMethod( type, PistonSetVelocityMethod );
+				result &= Reflection.HasMethod( type, PistonGetMinLimitMethod );
+				result &= Reflection.HasMethod( type, PistonSetMinLimitMethod );
+				result &= Reflection.HasMethod( type, PistonGetMaxLimitMethod );
+				result &= Reflection.HasMethod( type, PistonSetMaxLimitMethod );
+				result &= Reflection.HasMethod( type, PistonGetNetworkManagerMethod );
 
-				result &= HasField( type, PistonTopBlockEntityIdField );
-				result &= HasField( type, PistonCurrentPositionField );
+				result &= Reflection.HasField( type, PistonTopBlockEntityIdField );
+				result &= Reflection.HasField( type, PistonCurrentPositionField );
 
 				return result;
 			}
@@ -338,8 +337,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 		private PistonEntity m_parent;
 		private Object m_backingObject;
 
-		public static string PistonNetworkManagerNamespace = "";
-		public static string PistonNetworkManagerClass = "=mp1bKSDS8yU9iI4ahMEIi4XHAb=";
+		public static string PistonNetworkManagerNamespace = "Sandbox.Game.Multiplayer";
+		public static string PistonNetworkManagerClass = "MySyncPistonBase";
 
 		public static string PistonNetworkManagerBroadcastVelocity = "SetVelocity";
 		public static string PistonNetworkManagerBroadcastMinLimit = "SetMin";
@@ -394,9 +393,9 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				if ( type == null )
 					throw new Exception( "Could not find internal type for PistonNetworkManager" );
 
-				result &= BaseObject.HasMethod( type, PistonNetworkManagerBroadcastVelocity );
-				result &= BaseObject.HasMethod( type, PistonNetworkManagerBroadcastMinLimit );
-				result &= BaseObject.HasMethod( type, PistonNetworkManagerBroadcastMaxLimit );
+				result &= Reflection.HasMethod( type, PistonNetworkManagerBroadcastVelocity );
+				result &= Reflection.HasMethod( type, PistonNetworkManagerBroadcastMinLimit );
+				result &= Reflection.HasMethod( type, PistonNetworkManagerBroadcastMaxLimit );
 
 				return result;
 			}

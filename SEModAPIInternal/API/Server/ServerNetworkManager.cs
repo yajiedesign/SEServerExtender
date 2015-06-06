@@ -10,15 +10,19 @@ namespace SEModAPIInternal.API.Server
 	using System.Threading;
 	using Sandbox.Common.ObjectBuilders;
 	using Sandbox.Common.ObjectBuilders.Definitions;
-	using Sandbox.Common.ObjectBuilders.Serializer;
 	using Sandbox.Common.ObjectBuilders.Voxels;
+	using Sandbox.Engine.Multiplayer;
+	using Sandbox.Game.Multiplayer;
 	using Sandbox.ModAPI;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.API.Entity;
 	using SEModAPIInternal.API.Utility;
 	using SEModAPIInternal.Support;
+	using SteamSDK;
+	using VRage;
+	using VRage.ObjectBuilders;
 	using VRageMath;
-    using SteamSDK;
 
 	public class ServerNetworkManager : NetworkManager
 	{
@@ -34,106 +38,105 @@ namespace SEModAPIInternal.API.Server
 		private static List<ulong> m_inGame = new List<ulong>( );
 		private static Dictionary<ulong, Tuple<DateTime, int>> m_slowDown = new Dictionary<ulong, Tuple<DateTime, int>>( );
 
-		public static string ServerNetworkManagerNamespace = "";
-		public static string ServerNetworkManagerClass = "=O1XbQ6WcY6sEbcduBcq5Wrj8ok=";
+		public static string ServerNetworkManagerNamespace = "Sandbox.Engine.Multiplayer";
+		public static string ServerNetworkManagerClass = "MyDedicatedServer";
 
-		//public static string ServerNetworkManagerDisconnectPlayerMethod = "MyDedicatedServer_ClientLeft";
-		//public static string ServerNetworkManagerSetPlayerBannedMethod = "7746929EC77B732BB52EFC8FC757085D";
-		//public static string ServerNetworkManagerKickPlayerMethod = "33F8624DFE8A8E3FA9B8CC9A2446CCB8";
 		public static string ServerNetworkManagerDisconnectPlayerMethod = "MyDedicatedServer_ClientLeft";
 		public static string ServerNetworkManagerSetPlayerBannedMethod = "BanClient";
 		public static string ServerNetworkManagerKickPlayerMethod = "KickClient";
 
-		public static string ServerNetworkManagerConnectedPlayersField = "=hrd2r4yATC2NCJnhqOpJBW6EOU=";
+		public static string ServerNetworkManagerConnectedPlayersField = "m_members";
 
 		///////////// All these need testing /////////////
-		public static string NetworkingNamespace = "";
-		public static string NetworkingOnWorldRequestField = "=brsw3F6mys5AacUJHYIS14TVH2=";
+		public static string NetworkingNamespace = "Sandbox.Engine.Networking";
+		public static string NetworkingOnWorldRequestField = "Callback";
 
-		public static string MyMultipartMessageClass = "=cDj6WIzYFodmTa89pvnrADNanH=";
+		public static string MyMultipartMessageClass = "MyMultipartMessage";
 		public static string MyMultipartMessagePreemble = "SendPreemble";
 
-		public static string MySyncLayerClass = "=KgBTSimjVMGbRzYnmrvyNW6go7=";
-		public static string MySyncLayerField = "=CuPFQfpJpbb8r5FyAD4AIHGjwn=";
+		public static string MySyncLayerClass = "MySyncLayer";
+		public static string MySyncLayerField = "SyncLayer";
 
-		public static string MyTransportLayerField = "=hh7T0u2R6UFfq7GWwBLvlXzDmY=";
+		public static string MyTransportLayerField = "TransportLayer";
 		public static string MyTransportLayerClearMethod = "SendFlush";
 
-		public static string MyMultipartSenderClass = "=mPqaTNwLBiwakf5CK3At5qdRPuP=";
+		public static string MyMultipartSenderClass = "MyMultipartSender";
 		public static string MyMultipartSenderSendPart = "SendPart";
 
 		public static string MySyncLayerSendMessage = "SendMessage";
 		public static string MySyncLayerSendMessageToServer = "SendMessageToServer";
 
-		public static string MyControlMessageCallbackClass = "";
-		public static string MyControlMessageHandlerClass = "=ejTBGKAhbRZPjUJjNkuRRlSLGh=";
+		public static string MyControlMessageCallbackClass = "MyControlMessageCallback`1";
+		public static string MyControlMessageHandlerClass = "ControlMessageHandler`1";
 
 		///////////// All these need testing /////////////
 
-		private static string MultiplayerNamespace = "";
+		private static string MultiplayerNamespace = "Sandbox.Game.Multiplayer";
 
-		private static string SendCloseClass = "=uTZ4uCH8frEHtn0VfQJ0coHE2v=";
-		private static string SendCloseClosedMsg = "=gWIXWndvNVwS3ts7qLawsCo4L6=";
-		private static string SendCloseClosedMsgEntityId = "=oU1leYhaRCXt3fs7qWXtuRa3yR=";
+		private static string SendCloseClass = "MySyncEntity";
+		private static string SendCloseClosedMsg = "ClosedMsg";
+		private static string SendCloseClosedMsgEntityId = "EntityId";
 
-		private static string SendCreateClass = "=r6VaZpriOkuuKqMuT2aPUQtWow=";
-		private static string SendCreateRelativeCompressedMsg = "=Jb9TlhCazLAuTwbBe9RenF4v7Q=";
-		private static string SendCreateCompressedMsg = "=P5EKdj3EJhVtTJV0b2GCB1xNHsc=";
+		private static string SendCreateClass = "MySyncCreate";
+		private static string SendCreateRelativeCompressedMsg = "CreateRelativeCompressedMsg";
+		private static string SendCreateCompressedMsg = "CreateCompressedMsg";
 
-		private static string SendCreateRelativeCompressedMsgCreateMessage = "=tQs567mzcxroGhjYr8lz1PqzoU=";
-		private static string SendCreateRelativeCompressedMsgBaseEntity = "=xruOKzLEhNYhebgpKfA5KhhhXQ=";
-		private static string SendCreateRelativeCompressedMsgRelativeVelocity = "=fhrdPJMxlPgyEkzKIN17aUZ71n=";
+		private static string SendCreateRelativeCompressedMsgCreateMessage = "CreateMessage";
+		private static string SendCreateRelativeCompressedMsgBaseEntity = "BaseEntity";
+		private static string SendCreateRelativeCompressedMsgRelativeVelocity = "RelativeVelocity";
 
-		private static string SendCreateCompressedMsgObjectBuilders = "=DH7Oztbz8DbiZ1r4yCr7zTe1nP=";
-		private static string SendCreateCompressedMsgBuilderLengths = "=5pfmIWWAOZCsIysc7YMDSWY13g=";
+		private static string SendCreateCompressedMsgObjectBuilders = "ObjectBuilders";
+		private static string SendCreateCompressedMsgBuilderLengths = "BuilderLengths";
 
-		private static string PlayerCollectionClass = "=DRGhkayMZHgcBGswfi83RRIYcc=";
+		private static string PlayerCollectionClass = "MyPlayerCollection";
 
-		private static string RespawnMsg = "=Eyig3zbAKk28MoFuUhwULbgO9h=";
-		private static string RespawnMsgJoinGame = "=A029yp2A0WBnWMZpQSa7psz5f2=";
-		private static string RespawnMsgNewIdenity = "=4Wq6erLoLZgEqlM1zSSWH2WWjO=";
-		private static string RespawnMsgMedicalRoom = "=ShCxItwZ8brXdPEkz0JNzn1Fxp=";
-		private static string RespawnMsgRespawnShipId = "=at6Sy5bwukZGZdQGJYlInzdVm8=";
-		private static string RespawnMsgPlayerSerialId = "=YtTbep5CcJrw9BQnTJKPIk1pIFC=";
+		private const string RespawnMsg = "RespawnMsg";
+		private const string RespawnMsgJoinGame = "JoinGame";
+		private const string RespawnMsgNewIdenity = "NewIdentity";
+		private const string RespawnMsgMedicalRoom = "MedicalRoom";
+		private const string RespawnMsgRespawnShipId = "RespawnShipId";
+		private const string RespawnMsgPlayerSerialId = "PlayerSerialId";
 
-		private static string CharacterClass = "=2f1qCclG2slBN6Vw5QbX1zDIG6=";
-		private static string AttachMsg = "=XEAo5lB7RgcI6LNeKCn5RQSxUd=";
-		private static string AttachCharacterId = "=QoeTaBdFG5hLQTySy0Rra15gNK=";
-		private static string AttachCockpitId = "=KTOQgaLVpUNcBVMewWW3FM4m3y=";
+		private const string MySyncCharacterClass = "MySyncCharacter";
+		private const string AttachToCockpitMsg = "AttachToCockpitMsg";
+		private const string AttachCharacterId = "CharacterEntityId";
+		private const string AttachCockpitId = "CockpitEntityId";
 
-		private static string ControllableClass = "=mk2iB8SwAcxjNcwkIM1EjyAgDq=";
-		private static string UseMsg = "=teayYzvyUnChFRguXuaAzby6dA=";
-		private static string UseMsgEntityId = "=oU1leYhaRCXt3fs7qWXtuRa3yR=";
-		private static string UseMsgUsedByEntityId = "=tYrDGqpzipKWJtDSv3yh7YoVyw=";
-		private static string UseMsgUseAction = "=qQBgTP4aIaCfxhNjdeAaCPQv9fr=";
-		private static string UseMsgActionResult = "=61UFXGPQBQkmqO1WnSNBjwgqVb=";
+		private const string ControllableClass = "MySyncControllableEntity";
+		private const string UseMsg = "UseObject_UseMsg";
+		private const string UseMsgEntityId = "EntityId";
+		private const string UseMsgUsedByEntityId = "UsedByEntityId";
+		private const string UseMsgUseAction = "UseAction";
+		private const string UseMsgActionResult = "UseResult";
 
-		private static string ModAPINamespace = "";
-		private static string ModAPIHelperClass = "=llwrhjftxf0UHKTxHfJpMmeCEs=";
-		private static string SendDataMessageClass = "=ccuaV71K6ms95rCYBXoWr8qjT2=";
-		private static string SendReliableMsg = "=1FUeCV7aAYZCGFd3KUhH5A0mEe=";
-		private static string SendReliableMsgId = "=uRgMOkIX0djjiF3VDo6Hr4CmJx=";
-		private static string SendReliableMsgData = "=WNLspkvjzVBe8e418uPlh3EhJN=";
+		private const string ModAPINamespace = "Sandbox.ModAPI";
+		private const string ModAPIHelperClass = "MyModAPIHelper";
+		private const string SendDataMessageClass = "MyMultiplayerSyncObject";
+		private const string SendReliableMsg = "CustomModMsg";
+		private const string SendReliableMsgId = "ModID";
+		private const string SendReliableMsgData = "Message";
 
-		private static string ControlChangedMsg = "=Py6oB722vMEMLvXlAoczDrpoOu=";
-		private static string ControlChangedMsgEntityId = "=oU1leYhaRCXt3fs7qWXtuRa3yR=";
-		private static string ControlChangedMsgSteamId = "=uj3LI43ZxE5HcfdPWFZSliFEA1=";
-		private static string ControlChangedMsgSerialId = "=YtTbep5CcJrw9BQnTJKPIk1pIFC=";
+		private const string ControlChangedMsg = "ControlChangedMsg";
+		private const string ControlChangedMsgEntityId = "EntityId";
+		private const string ControlChangedMsgSteamId = "ClientSteamId";
+		private const string ControlChangedMsgSerialId = "PlayerSerialId";
 
-		private static string SetPlayerDeadMsg = "=6pj8lSLelEguuqvNjgO6Hglqax=";
-		private static string SetPlayerDeadMsgSteamId = "=uj3LI43ZxE5HcfdPWFZSliFEA1=";
-		private static string SetPlayerDeadMsgSerialId = "=YtTbep5CcJrw9BQnTJKPIk1pIFC=";
-		private static string SetPlayerDeadMsgIsDead = "=vJoyYM9pjeoG12SSUAOQjNFTHG=";
+		private const string SetPlayerDeadMsg = "SetPlayerDeadMsg";
+		private const string SetPlayerDeadMsgSteamId = "ClientSteamId";
+		private const string SetPlayerDeadMsgSerialId = "PlayerSerialId";
+		private const string SetPlayerDeadMsgIsDead = "IsDead";
 
-		private static string CharacterChangedMsg = "=GLzqhdD8SwqaIlodUM9kTayE7u=";
-		private static string CharacterChangedMsgCharacterEntityId = "=QoeTaBdFG5hLQTySy0Rra15gNK=";
-		private static string CharacterChangedMsgControlledEntityId = "=rZPDoWdhk5ehIChJ7JrirJmF7k=";
-		private static string CharacterChangedMsgSteamId = "=uj3LI43ZxE5HcfdPWFZSliFEA1=";
-		private static string CharacterChangedMsgClientId = "=YtTbep5CcJrw9BQnTJKPIk1pIFC=";
+		private const string CharacterChangedMsg = "CharacterChangedMsg";
+		private const string CharacterChangedMsgCharacterEntityId = "CharacterEntityId";
+		private const string CharacterChangedMsgControlledEntityId = "ControlledEntityId";
+		private const string CharacterChangedMsgSteamId = "ClientSteamId";
+		private const string CharacterChangedMsgClientId = "PlayerSerialId";
 
 		#endregion
 
 		#region "Properties"
+
+        public static bool WorldVoxelModify { get; set; }
 
 		new public static ServerNetworkManager Instance
 		{
@@ -150,109 +153,88 @@ namespace SEModAPIInternal.API.Server
 
 		#region "Methods"
 
-		new public static bool ReflectionUnitTest( )
+		public static bool ReflectionUnitTest( )
 		{
 			try
 			{
 				Type type1 = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( ServerNetworkManagerNamespace, ServerNetworkManagerClass );
 				if ( type1 == null )
-					throw new Exception( "Could not find internal type for ServerNetworkManager" );
+					throw new TypeLoadException( "Could not find internal type for ServerNetworkManager" );
 				bool result = true;
-				result &= BaseObject.HasMethod( type1, ServerNetworkManagerSetPlayerBannedMethod );
-				result &= BaseObject.HasMethod( type1, ServerNetworkManagerDisconnectPlayerMethod );
-				result &= BaseObject.HasMethod( type1, ServerNetworkManagerKickPlayerMethod );
-				result &= BaseObject.HasField( type1, ServerNetworkManagerConnectedPlayersField );
+				result &= Reflection.HasMethod( type1, ServerNetworkManagerSetPlayerBannedMethod );
+				result &= Reflection.HasMethod( type1, ServerNetworkManagerDisconnectPlayerMethod );
+				result &= Reflection.HasMethod( type1, ServerNetworkManagerKickPlayerMethod );
+				result &= Reflection.HasField( type1, ServerNetworkManagerConnectedPlayersField );
 
-				Type type2 = NetworkManagerType;
-				if ( type2 == null )
-					throw new Exception( "Could not find internal type for NetworkManager" );
-				result &= BaseObject.HasField( type2, MySyncLayerField );
+				Type myMultiplayerBaseType = typeof ( MyMultiplayerBase );
+				result &= Reflection.HasField( myMultiplayerBaseType, MySyncLayerField );
 
-				Type syncLayer = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, MySyncLayerClass );
-				if ( syncLayer == null )
-					throw new Exception( "Could not find internal type for SyncLayer" );
-				result &= BaseObject.HasMethod( syncLayer, MySyncLayerSendMessage );
+				Type syncLayer = typeof ( MySyncLayer );
+				result &= Reflection.HasMethod( syncLayer, MySyncLayerSendMessage );
 
-				Type type3 = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, SendCloseClass );
-				if ( type3 == null )
-					throw new Exception( "Could not find internal type for SendCloseClass" );
+				Type mySyncEntityType = typeof ( MySyncEntity );
+				result &= BaseObject.HasNestedType( mySyncEntityType, SendCloseClosedMsg );
 
-				result &= BaseObject.HasNestedType( type3, SendCloseClosedMsg );
-
-				Type nestedClosedMsgType = type3.GetNestedType( SendCloseClosedMsg, BindingFlags.NonPublic | BindingFlags.Public );
+				Type nestedClosedMsgType = mySyncEntityType.GetNestedType( SendCloseClosedMsg, BindingFlags.NonPublic | BindingFlags.Public );
 				if ( nestedClosedMsgType == null )
-					throw new Exception( "Could not find internal NestedClosedMsgType" );
+					throw new TypeLoadException( "Could not find internal NestedClosedMsgType" );
 
-				result &= BaseObject.HasField( nestedClosedMsgType, SendCloseClosedMsgEntityId );
+				result &= Reflection.HasField( nestedClosedMsgType, SendCloseClosedMsgEntityId );
 
 				Type type4 = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, SendCreateClass );
 				if ( type4 == null )
-					throw new Exception( "Could not find internal type for SendCreateClass" );
+					throw new TypeLoadException( "Could not find internal type for SendCreateClass" );
 
 				result &= BaseObject.HasNestedType( type4, SendCreateCompressedMsg );
 
 				Type nestedCreateType = type4.GetNestedType( SendCreateCompressedMsg, BindingFlags.Public | BindingFlags.NonPublic );
 				if ( nestedCreateType == null )
-					throw new Exception( "Could not find internal type for SendCreateCompressedMsg" );
+					throw new TypeLoadException( "Could not find internal type for SendCreateCompressedMsg" );
 
-				result &= BaseObject.HasField( nestedCreateType, SendCreateCompressedMsgObjectBuilders );
-				result &= BaseObject.HasField( nestedCreateType, SendCreateCompressedMsgBuilderLengths );
+				result &= Reflection.HasField( nestedCreateType, SendCreateCompressedMsgObjectBuilders );
+				result &= Reflection.HasField( nestedCreateType, SendCreateCompressedMsgBuilderLengths );
 
-				Type type5 = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, PlayerCollectionClass );
-				if ( type5 == null )
-					throw new Exception( "Could not find internal type for PlayerCollectionClass" );
+				Type respawnMsgType = typeof ( MyPlayerCollection.RespawnMsg );
 
-				Type respawnMsgType = type5.GetNestedType( RespawnMsg, BindingFlags.NonPublic | BindingFlags.Public );
-				if ( respawnMsgType == null )
-					throw new Exception( "Could not find internal type for RespawnMsg" );
+				result &= Reflection.HasField( respawnMsgType, RespawnMsgJoinGame );
+				result &= Reflection.HasField( respawnMsgType, RespawnMsgNewIdenity );
+				result &= Reflection.HasField( respawnMsgType, RespawnMsgMedicalRoom );
+				result &= Reflection.HasField( respawnMsgType, RespawnMsgRespawnShipId );
+				result &= Reflection.HasField( respawnMsgType, RespawnMsgPlayerSerialId );
 
-				result &= BaseObject.HasField( respawnMsgType, RespawnMsgJoinGame );
-				result &= BaseObject.HasField( respawnMsgType, RespawnMsgNewIdenity );
-				result &= BaseObject.HasField( respawnMsgType, RespawnMsgMedicalRoom );
-				result &= BaseObject.HasField( respawnMsgType, RespawnMsgRespawnShipId );
-				result &= BaseObject.HasField( respawnMsgType, RespawnMsgPlayerSerialId );
+				Type type6 = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, MySyncCharacterClass );
+				if ( type6 == null )
+					throw new TypeLoadException( "Could not find internal type for MySyncCharacterClass" );
 
-				Type type6 = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, CharacterClass );
-				if ( type5 == null )
-					throw new Exception( "Could not find internal type for CharacterClass" );
-
-				Type attachMsgType = type6.GetNestedType( AttachMsg, BindingFlags.NonPublic | BindingFlags.Public );
+				Type attachMsgType = type6.GetNestedType( AttachToCockpitMsg, BindingFlags.NonPublic | BindingFlags.Public );
 				if ( attachMsgType == null )
-					throw new Exception( "Could not find internal type for AttachMsg" );
+					throw new TypeLoadException( "Could not find internal type for AttachToCockpitMsg" );
 
-				result &= BaseObject.HasField( attachMsgType, AttachCharacterId );
-				result &= BaseObject.HasField( attachMsgType, AttachCockpitId );
+				result &= Reflection.HasField( attachMsgType, AttachCharacterId );
+				result &= Reflection.HasField( attachMsgType, AttachCockpitId );
 
-				Type controllableClassType = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, ControllableClass );
-				if ( type5 == null )
-					throw new Exception( "Could not find internal type for ControllableClassType" );
+				Type controllableClassType = typeof ( MySyncControllableEntity );
 
 				Type useMsgType = controllableClassType.GetNestedType( UseMsg, BindingFlags.NonPublic | BindingFlags.Public );
 				if ( useMsgType == null )
-					throw new Exception( "Could not find internal type for UseMsg" );
+					throw new TypeLoadException( "Could not find internal type for UseMsg" );
 
-				result &= BaseObject.HasField( useMsgType, UseMsgEntityId );
-				result &= BaseObject.HasField( useMsgType, UseMsgUsedByEntityId );
-				result &= BaseObject.HasField( useMsgType, UseMsgUseAction );
+				result &= Reflection.HasField( useMsgType, UseMsgEntityId );
+				result &= Reflection.HasField( useMsgType, UseMsgUsedByEntityId );
+				result &= Reflection.HasField( useMsgType, UseMsgUseAction );
 
-				Type modAPIHelperClassType = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( ModAPINamespace, ModAPIHelperClass );
-				if ( modAPIHelperClassType == null )
-					throw new Exception( "Could not find internal type for ModAPIHelperClass" );
-
-				Type sendDataMessageClassType = modAPIHelperClassType.GetNestedType( SendDataMessageClass, BindingFlags.Public | BindingFlags.NonPublic );
-				if ( sendDataMessageClassType == null )
-					throw new Exception( "Could not find internal type for SendDataMessageClass" );
+				Type sendDataMessageClassType = typeof ( MyModAPIHelper.MyMultiplayerSyncObject );
 
 				Type sendReliableMsgType = sendDataMessageClassType.GetNestedType( SendReliableMsg, BindingFlags.Public | BindingFlags.NonPublic );
 				if ( sendReliableMsgType == null )
-					throw new Exception( "Could not find internal type for SendReliableMsg" );
+					throw new TypeLoadException( "Could not find internal type for SendReliableMsg" );
 
-				result &= BaseObject.HasField( sendReliableMsgType, SendReliableMsgId );
-				result &= BaseObject.HasField( sendReliableMsgType, SendReliableMsgData );
+				result &= Reflection.HasField( sendReliableMsgType, SendReliableMsgId );
+				result &= Reflection.HasField( sendReliableMsgType, SendReliableMsgData );
 
 				return result;
 			}
-			catch ( Exception ex )
+			catch ( TypeLoadException ex )
 			{
 				ApplicationLog.BaseLog.Error( ex );
 				return false;
@@ -347,7 +329,7 @@ namespace SEModAPIInternal.API.Server
 			int pos = 0;
 			try
 			{
-				Type sendCloseClassType = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, SendCloseClass );
+				Type sendCloseClassType = typeof ( MySyncEntity );
 				Type sendCloseType = sendCloseClassType.GetNestedType( SendCloseClosedMsg, BindingFlags.NonPublic );
 				FieldInfo sendCloseEntityIdField = sendCloseType.GetField( SendCloseClosedMsgEntityId );
 				Object sendCloseStruct = Activator.CreateInstance( sendCloseType );
@@ -446,8 +428,8 @@ namespace SEModAPIInternal.API.Server
 
 		public static void AttachToCockpit( long characterId, long cockpitId, ulong steamId )
 		{
-			Type syncCharacterClassType = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, CharacterClass );
-			Type attachMsgType = syncCharacterClassType.GetNestedType( AttachMsg, BindingFlags.NonPublic | BindingFlags.Public );
+			Type syncCharacterClassType = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, MySyncCharacterClass );
+			Type attachMsgType = syncCharacterClassType.GetNestedType( AttachToCockpitMsg, BindingFlags.NonPublic | BindingFlags.Public );
 
 			FieldInfo attachCharacterId = attachMsgType.GetField( AttachCharacterId );
 			FieldInfo attachCockpitId = attachMsgType.GetField( AttachCockpitId );
@@ -856,6 +838,30 @@ namespace SEModAPIInternal.API.Server
 							}
 						}
 					}
+
+                    // This will modify the world data to remove voxels and turn off procedural for the player.  The
+                    // server controls procedural anyway, and doesn't require the user to know about it.  If we don't
+                    // turn it off, the objects will still generate on the server.  Possible issue: turning on voxel
+                    // management + procedural encounters may be an issue, as I don't think the server sends procedural
+                    // encounters to the client.  This may be a gotcha issue when it comes to using this option
+                    if (WorldVoxelModify)
+                    {
+                        for (int r = myObjectBuilderWorld.Sector.SectorObjects.Count - 1; r >= 0; r--)
+                        {
+                            MyObjectBuilder_EntityBase entity = (MyObjectBuilder_EntityBase)myObjectBuilderWorld.Sector.SectorObjects[r];
+
+                            if (!(entity is MyObjectBuilder_VoxelMap))
+                                continue;
+
+                            myObjectBuilderWorld.Sector.SectorObjects.RemoveAt(r);
+                        }
+
+                        myObjectBuilderWorld.Sector.Encounters = null;
+
+                        myObjectBuilderWorld.VoxelMaps.Dictionary.Clear();
+                        myObjectBuilderWorld.Checkpoint.Settings.ProceduralDensity = 0f;
+                        myObjectBuilderWorld.Checkpoint.Settings.ProceduralSeed = 0;
+                    }
 
 					MyObjectBuilder_Checkpoint checkpoint = myObjectBuilderWorld.Checkpoint;
 					checkpoint.WorkshopId = null;

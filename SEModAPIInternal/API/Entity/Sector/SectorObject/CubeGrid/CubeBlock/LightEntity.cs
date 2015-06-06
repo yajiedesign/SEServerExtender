@@ -4,7 +4,9 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System.ComponentModel;
 	using System.Reflection;
 	using System.Runtime.Serialization;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 	using VRageMath;
@@ -14,20 +16,20 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	{
 		#region "Attributes"
 
-		public static string LightNamespace = "";
-		public static string LightClass = "=FS9XaTQBULhE857hF1lkq5eY89=";
+		public static string LightNamespace = "Sandbox.Game.Entities.Blocks";
+		public static string LightClass = "MyLightingBlock";
 
 		public static string LightUpdateColorMethod = "set_Color";
 		public static string LightUpdateIntensityMethod = "set_Intensity";
 		public static string LightUpdateFalloffMethod = "set_Falloff";
 		public static string LightUpdateRadiusMethod = "set_Radius";
 
-		public static string LightNetworkManagerField = "=gNAvpmtOwXYmmcG9ynRDGRitUw=";
+		public static string LightNetworkManagerField = "SyncObject";
 
 		////////////////////////////////////////////////////////////////////////
 
-		public static string LightNetworkManagerNamespace = "";
-		public static string LightNetworkManagerClass = "=KQ3UhmTVDnlgjehKAcLT0Ldkte=";
+		public static string LightNetworkManagerNamespace = "Sandbox.Game.Multiplayer";
+		public static string LightNetworkManagerClass = "MySyncLightingBlock";
 
 		// Need to find this method update again, lights changed completely - I believe it changed to setting individual properties instead of all of them:
 		// Color, Radius, Falloff, Intensity, BlinkInterval, BlinkLength, BlinkOffset - 
@@ -91,8 +93,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateLight;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateLight );
 				}
 			}
 		}
@@ -110,8 +111,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateLight;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateLight );
 				}
 			}
 		}
@@ -129,8 +129,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateLight;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateLight );
 				}
 			}
 		}
@@ -148,8 +147,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateLight;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateLight );
 				}
 			}
 		}
@@ -167,8 +165,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateLight;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateLight );
 				}
 			}
 		}
@@ -186,8 +183,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateLight;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateLight );
 				}
 			}
 		}
@@ -205,8 +201,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateLight;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateLight );
 				}
 			}
 		}
@@ -224,8 +219,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateLight;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateLight );
 				}
 			}
 		}
@@ -286,11 +280,11 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				Type type = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( LightNamespace, LightClass );
 				if ( type == null )
 					throw new Exception( "Could not find internal type for LightEntity" );
-				result &= HasMethod( type, LightUpdateColorMethod );
-				result &= HasMethod( type, LightUpdateIntensityMethod );
-				result &= HasMethod( type, LightUpdateFalloffMethod );
-				result &= HasMethod( type, LightUpdateRadiusMethod );
-				result &= HasField( type, LightNetworkManagerField );
+				result &= Reflection.HasMethod( type, LightUpdateColorMethod );
+				result &= Reflection.HasMethod( type, LightUpdateIntensityMethod );
+				result &= Reflection.HasMethod( type, LightUpdateFalloffMethod );
+				result &= Reflection.HasMethod( type, LightUpdateRadiusMethod );
+				result &= Reflection.HasField( type, LightNetworkManagerField );
 
 				Type type2 = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( LightNetworkManagerNamespace, LightNetworkManagerClass );
 				if ( type2 == null )

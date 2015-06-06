@@ -6,8 +6,11 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 	using System.IO;
 	using System.Runtime.Serialization;
 	using Microsoft.Xml.Serialization.GeneratedAssembly;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
 	using Sandbox.Definitions;
+	using SEModAPI.API;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid;
 	using SEModAPIInternal.API.Utility;
@@ -57,7 +60,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 		}
 
 		public CubeGridEntity( FileInfo prefabFile )
-			: base( BaseObjectManager.LoadContentFile<MyObjectBuilder_CubeGrid, MyObjectBuilder_CubeGridSerializer>( prefabFile ) )
+			: base( BaseObjectManager.LoadContentFile<MyObjectBuilder_CubeGrid>( prefabFile ) )
 		{
 			EntityId = 0;
 			ObjectBuilder.EntityId = 0;
@@ -418,7 +421,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 
 		public override void Dispose( )
 		{
-			if ( SandboxGameAssemblyWrapper.IsDebugging )
+			if ( ExtenderOptions.IsDebugging )
 				ApplicationLog.BaseLog.Debug( "Disposing CubeGridEntity '" + Name + "' ..." );
 
 			//Dispose the cube grid by disposing all of the blocks
@@ -430,7 +433,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 			{
 				cubeBlock.Dispose();
 			}
-			if (SandboxGameAssemblyWrapper.IsDebugging)
+			if (ExtenderOptions.IsDebugging)
 				ApplicationLog.BaseLog.Debug("Disposed " + blockCount.ToString() + " blocks on CubeGridEntity '" + Name + "'");
 			*/
 			//Broadcast the removal to the clients just to save processing time for the clients
@@ -457,7 +460,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 		{
 			RefreshBaseCubeBlocks( );
 
-			BaseObjectManager.SaveContentFile<MyObjectBuilder_CubeGrid, MyObjectBuilder_CubeGridSerializer>( ObjectBuilder, fileInfo );
+			BaseObjectManager.SaveContentFile( ObjectBuilder, fileInfo );
 		}
 
 		new public MyObjectBuilder_CubeGrid Export( )
@@ -475,10 +478,10 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 				if ( type == null )
 					throw new Exception( "Could not find internal type for CubeGridEntity" );
 				bool result = true;
-				result &= HasMethod( type, CubeGridGetCubeBlocksHashSetMethod );
-				result &= HasMethod( type, CubeGridAddCubeBlockMethod );
-				result &= HasMethod( type, CubeGridRemoveCubeBlockMethod );
-				result &= HasMethod( type, CubeGridGetManagerManagerMethod );
+				result &= Reflection.HasMethod( type, CubeGridGetCubeBlocksHashSetMethod );
+				result &= Reflection.HasMethod( type, CubeGridAddCubeBlockMethod );
+				result &= Reflection.HasMethod( type, CubeGridRemoveCubeBlockMethod );
+				result &= Reflection.HasMethod( type, CubeGridGetManagerManagerMethod );
 				//result &= HasField( type, CubeGridBlockGroupsField );
 
 				return result;
@@ -510,16 +513,14 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 		{
 			_cubeBlockToAddRemove = cubeBlock;
 
-			Action action = InternalAddCubeBlock;
-			SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+			MySandboxGame.Static.Invoke( InternalAddCubeBlock );
 		}
 
 		public void DeleteCubeBlock( CubeBlockEntity cubeBlock )
 		{
 			_cubeBlockToAddRemove = cubeBlock;
 
-			Action action = InternalRemoveCubeBlock;
-			SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+			MySandboxGame.Static.Invoke( InternalRemoveCubeBlock );
 		}
 
 		protected void RefreshBaseCubeBlocks( )

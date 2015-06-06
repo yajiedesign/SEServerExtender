@@ -1,3 +1,7 @@
+using System.Collections;
+using System.Management;
+using SEModAPIInternal.Support;
+
 namespace SEServerExtender
 {
 	using System;
@@ -11,7 +15,9 @@ namespace SEServerExtender
 	using System.Threading;
 	using System.Windows.Forms;
 	using NLog;
+	using NLog.Layouts;
 	using NLog.Targets;
+	using SEModAPI.API;
 	using SEModAPI.Support;
 	using SEModAPIExtensions.API;
 	using SEModAPIInternal.API.Chat;
@@ -23,21 +29,68 @@ namespace SEServerExtender
 		private static int _maxChatHistoryMessageCount = 100;
 		public static readonly Logger ChatLog = LogManager.GetLogger( "ChatLog" );
 		public static readonly Logger BaseLog = LogManager.GetLogger( "BaseLog" );
+		public static readonly Logger PluginLog = LogManager.GetLogger( "PluginLog" );
 		public class WindowsService : ServiceBase
 		{
 			public WindowsService( )
 			{
-				ServiceName = "SEServerExtender";
 				CanPauseAndContinue = false;
 				CanStop = true;
 				AutoLog = true;
+
+
 			}
 
 			protected override void OnStart( string[ ] args )
 			{
 				BaseLog.Info( "Starting SEServerExtender Service with {0} arguments ...", args.Length );
 
-				Start( args );
+			    List<string> listArg = args.ToList();
+			    string serviceName = string.Empty;
+                string gamePath = new DirectoryInfo(PathManager.BasePath).Parent.FullName;
+                // Instance autodetect
+			    if (args.All(item => !item.Contains("instance")))
+			    {
+                    BaseLog.Info( "No instance specified, guessing it ...");
+			        int processId = System.Diagnostics.Process.GetCurrentProcess().Id;
+			        String query = "SELECT Name FROM Win32_Service where ProcessId = " + processId;
+			        ManagementObjectSearcher searcher = new ManagementObjectSearcher(query);
+			        ManagementObjectCollection collection = searcher.Get();
+			        IEnumerator enumerator = collection.GetEnumerator();
+			        enumerator.MoveNext();
+			        ManagementObject managementObject = (ManagementObject) enumerator.Current;
+
+			        serviceName = managementObject["Name"].ToString();
+                    BaseLog.Info( "Instance detected : {0}", serviceName);
+                    listArg.Add("instance=" + serviceName);
+			    }
+                // gamepath autodetect
+                if (args.All(item => !item.Contains("gamepath")))
+                {
+                    BaseLog.Info("No gamepath specified, guessing it ...");
+                    
+                    BaseLog.Info("gamepath detected : {0}", gamePath);
+                    listArg.Add("gamepath=\"" + gamePath + "\"");
+                }
+
+                // It's a service, it's mandatory to use noconsole (nogui and autostart implied)
+			    if (args.All(item => !item.Contains("noconsole")))
+			    {
+                    BaseLog.Info("Service Startup, noconsole is mandatory, adding it ...");
+                    listArg.Add("noconsole");
+			    }
+
+                // It's a service, storing the logs in the instace directly
+                if (args.All(item => !item.Contains("logpath")) && !String.IsNullOrWhiteSpace(serviceName))
+			    {
+                    listArg.Add("logpath=\"C:\\ProgramData\\SpaceEngineersDedicated\\" + serviceName + "\"");
+			    }
+                if (args.All(item => !item.Contains("instancepath")) && !String.IsNullOrWhiteSpace(serviceName))
+                {
+                    listArg.Add("instancepath=\"C:\\ProgramData\\SpaceEngineersDedicated\\" + serviceName + "\"");
+                }
+
+			    Start( listArg.ToArray() );
 			}
 
 			protected override void OnStop( )
@@ -96,10 +149,10 @@ namespace SEServerExtender
 								  NoGui = false,
 								  NoConsole = false,
 								  Debug = false,
-								  GamePath = Directory.GetParent( Directory.GetCurrentDirectory( ) ).FullName,
+								  GamePath = new DirectoryInfo( PathManager.BasePath ).Parent.FullName,
 								  NoWcf = false,
 								  Autosave = 0,
-								  Path = string.Empty,
+								  InstancePath = string.Empty,
 								  CloseOnCrash = false,
 								  RestartOnCrash = false,
 								  Args = string.Join( " ", args.Select( x => string.Format( "\"{0}\"", x ) ) )
@@ -116,58 +169,112 @@ namespace SEServerExtender
 					ConfigurationManager.AppSettings.Add( "WCFChatMaxMessageHistoryCount", "100" );
 				}
 
+			bool logPathSet = false;
 			//Process the args
 			foreach ( string arg in args )
 			{
-				if ( arg.Split( '=' ).Length > 1 )
+				string[ ] splitAtEquals = arg.Split( '=' );
+				if ( splitAtEquals.Length > 1 )
 				{
-					string argName = arg.Split( '=' )[ 0 ];
-					string argValue = arg.Split( '=' )[ 1 ];
+					string argName = splitAtEquals[ 0 ];
+					string argValue = splitAtEquals[ 1 ];
 
-					if ( argName.ToLower( ).Equals( "instance" ) )
+					string lowerCaseArgument = argName.ToLower( );
+					if ( lowerCaseArgument.Equals( "instance" ) )
 					{
 						if ( argValue[ argValue.Length - 1 ] == '"' )
 							argValue = argValue.Substring( 0, argValue.Length - 1 );
 						extenderArgs.InstanceName = argValue;
+
+						//Only let this override log path if the log path wasn't already explicitly set
+						if ( !logPathSet )
+						{
+							FileTarget baseLogTarget = LogManager.Configuration.FindTargetByName( "BaseLog" ) as FileTarget;
+							if ( baseLogTarget != null )
+							{
+								baseLogTarget.FileName = baseLogTarget.FileName.Render( new LogEventInfo { TimeStamp = DateTime.Now } ).Replace( "NoInstance", argValue );
+							}
+							FileTarget chatLogTarget = LogManager.Configuration.FindTargetByName( "ChatLog" ) as FileTarget;
+							if ( chatLogTarget != null )
+							{
+								chatLogTarget.FileName = chatLogTarget.FileName.Render( new LogEventInfo { TimeStamp = DateTime.Now } ).Replace( "NoInstance", argValue );
+							}
+							FileTarget pluginLogTarget = LogManager.Configuration.FindTargetByName( "PluginLog" ) as FileTarget;
+							if ( pluginLogTarget != null )
+							{
+								pluginLogTarget.FileName = pluginLogTarget.FileName.Render( new LogEventInfo { TimeStamp = DateTime.Now } ).Replace( "NoInstance", argValue );
+							}
+						}
 					}
-					else if ( argName.ToLower( ).Equals( "gamepath" ) )
+					else if ( lowerCaseArgument.Equals( "gamepath" ) )
 					{
 						if ( argValue[ argValue.Length - 1 ] == '"' )
-							argValue = argValue.Substring( 0, argValue.Length - 1 );
+							argValue = argValue.Substring( 1, argValue.Length - 2 );
 						extenderArgs.GamePath = argValue;
 					}
-					else if ( argName.ToLower( ).Equals( "autosave" ) )
+					else if ( lowerCaseArgument.Equals( "autosave" ) )
 					{
-						try
-						{
-							extenderArgs.Autosave = int.Parse( argValue );
-						}
-						catch
-						{
-							//Do nothing
-						}
+						if ( !int.TryParse( argValue, out extenderArgs.Autosave ) )
+							BaseLog.Warn( "Autosave parameter was not a valid integer." );
 					}
-					else if ( argName.ToLower( ).Equals( "path" ) )
+					else if ( lowerCaseArgument.Equals( "path" ) )
 					{
 						if ( argValue[ argValue.Length - 1 ] == '"' )
-							argValue = argValue.Substring( 0, argValue.Length - 1 );
-						extenderArgs.Path = argValue;
+							argValue = argValue.Substring( 1, argValue.Length - 2 );
+						extenderArgs.InstancePath = argValue;
+					}
+					else if ( lowerCaseArgument.Equals( "instancepath" ) )
+					{
+						if ( argValue[ argValue.Length - 1 ] == '"' )
+							argValue = argValue.Substring( 1, argValue.Length - 2 );
+						extenderArgs.InstancePath = argValue;
+					}
+					else if ( lowerCaseArgument == "logpath" )
+					{
+						if ( argValue[ argValue.Length - 1 ] == '"' )
+							argValue = argValue.Substring( 1, argValue.Length - 2 );
+
+						//This argument always prevails.
+						FileTarget baseLogTarget = LogManager.Configuration.FindTargetByName( "BaseLog" ) as FileTarget;
+						if ( baseLogTarget != null )
+						{
+							Layout l = new SimpleLayout( Path.Combine( argValue, "SEServerExtenderLog-${shortdate}.log" ) );
+							baseLogTarget.FileName = l.Render( new LogEventInfo { TimeStamp = DateTime.Now } );
+							ApplicationLog.BaseLog = BaseLog;
+						}
+						FileTarget chatLogTarget = LogManager.Configuration.FindTargetByName( "ChatLog" ) as FileTarget;
+						if ( chatLogTarget != null )
+						{
+							Layout l = new SimpleLayout( Path.Combine( argValue, "ChatLog-${shortdate}.log" ) );
+							chatLogTarget.FileName = l.Render( new LogEventInfo { TimeStamp = DateTime.Now } );
+							ApplicationLog.ChatLog = ChatLog;
+						}
+						FileTarget pluginLogTarget = LogManager.Configuration.FindTargetByName( "PluginLog" ) as FileTarget;
+						if ( pluginLogTarget != null )
+						{
+							Layout l = new SimpleLayout( Path.Combine( argValue, "PluginLog-${shortdate}.log" ) );
+							pluginLogTarget.FileName = l.Render( new LogEventInfo { TimeStamp = DateTime.Now } );
+							logPathSet = true;
+							ApplicationLog.PluginLog = PluginLog;
+						}
+
 					}
 				}
 				else
 				{
-					if ( arg.ToLower( ).Equals( "autostart" ) )
+					string lowerCaseArgument = arg.ToLower( );
+					if ( lowerCaseArgument.Equals( "autostart" ) )
 					{
 						extenderArgs.AutoStart = true;
 					}
-					if ( arg.ToLower( ).Equals( "nogui" ) )
+					else if ( lowerCaseArgument.Equals( "nogui" ) )
 					{
 						extenderArgs.NoGui = true;
 
 						//Implies autostart
 						//extenderArgs.AutoStart = true;
 					}
-					if ( arg.ToLower( ).Equals( "noconsole" ) )
+					else if ( lowerCaseArgument.Equals( "noconsole" ) )
 					{
 						extenderArgs.NoConsole = true;
 
@@ -175,42 +282,46 @@ namespace SEServerExtender
 						extenderArgs.NoGui = true;
 						extenderArgs.AutoStart = true;
 					}
-					if ( arg.ToLower( ).Equals( "debug" ) )
+					else if ( lowerCaseArgument.Equals( "debug" ) )
 					{
 						extenderArgs.Debug = true;
 					}
-					if ( arg.ToLower( ).Equals( "nowcf" ) )
+					else if ( lowerCaseArgument.Equals( "nowcf" ) )
 					{
 						extenderArgs.NoWcf = true;
 					}
-					if ( arg.ToLower( ).Equals( "closeoncrash" ) )
+					else if ( lowerCaseArgument.Equals( "closeoncrash" ) )
 					{
 						extenderArgs.CloseOnCrash = true;
 					}
-					if ( arg.ToLower( ).Equals( "autosaveasync" ) )
+					else if ( lowerCaseArgument.Equals( "autosaveasync" ) )
 					{
 						extenderArgs.AutoSaveSync = false;
 					}
-					if ( arg.ToLower( ).Equals( "autosavesync" ) )
+					else if ( lowerCaseArgument.Equals( "autosavesync" ) )
 					{
 						extenderArgs.AutoSaveSync = true;
 					}
-					if ( arg.ToLower( ).Equals( "restartoncrash" ) )
+					else if ( lowerCaseArgument.Equals( "restartoncrash" ) )
 					{
 						extenderArgs.RestartOnCrash = true;
 					}
-					if ( arg.ToLower( ).Equals( "wrr" ) )
+					else if ( lowerCaseArgument.Equals( "wrr" ) )
 					{
 						extenderArgs.WorldRequestReplace = true;
 					}
-					if ( arg.ToLower( ).Equals( "wrm" ) )
+					else if ( lowerCaseArgument.Equals( "wrm" ) )
 					{
 						extenderArgs.WorldDataModify = true;
 					}
+                    else if (lowerCaseArgument.Equals("wvm"))
+                    {
+                        extenderArgs.WorldVoxelModify = true;
+                    }
 				}
 			}
 
-			if ( !string.IsNullOrEmpty( extenderArgs.Path ) )
+			if ( !string.IsNullOrEmpty( extenderArgs.InstancePath ) )
 			{
 				extenderArgs.InstanceName = string.Empty;
 			}
@@ -223,13 +334,13 @@ namespace SEServerExtender
 			}
 
 			if ( extenderArgs.Debug )
-				SandboxGameAssemblyWrapper.IsDebugging = true;
+				ExtenderOptions.IsDebugging = true;
 
 			try
 			{
 				bool unitTestResult = BasicUnitTestManager.Instance.Run( );
 				if ( !unitTestResult )
-					SandboxGameAssemblyWrapper.IsInSafeMode = true;
+					ExtenderOptions.IsInSafeMode = true;
 
 				Server = Server.Instance;
 				Server.CommandLineArgs = extenderArgs;
@@ -246,8 +357,9 @@ namespace SEServerExtender
 
 				if ( !extenderArgs.NoWcf )
 				{
-					BaseLog.Info( "Opening up WCF service listener" );
-					ServerServiceHost = new ServiceHost( typeof( ServerService.ServerService ) );
+					string uriString = string.Format( "{0}{1}", ConfigurationManager.AppSettings[ "WCFServerServiceBaseAddress" ], CommandLineArgs.InstanceName );
+					BaseLog.Info( "Opening up WCF service listener at {0}", uriString );
+					ServerServiceHost = new ServiceHost( typeof( ServerService.ServerService ), new Uri( uriString, UriKind.Absolute ) );
 					ServerServiceHost.Open( );
 					ChatManager.Instance.ChatMessage += ChatManager_ChatMessage;
 				}
@@ -260,6 +372,7 @@ namespace SEServerExtender
 				}
 				else if ( Environment.UserInteractive )
 					Console.ReadLine( );
+
 			}
 			catch ( AutoException eEx )
 			{

@@ -1,6 +1,8 @@
 namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 {
 	using System;
+	using Sandbox;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid;
 	using SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock;
@@ -15,8 +17,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 
 		private bool m_dampenersEnabled;
 
-		public static string CubeGridThrusterManagerNamespace = "";
-		public static string CubeGridThrusterManagerClass = "=RQ6GT5VPdcFWeja6eus3dlb5mI=";
+		public static string CubeGridThrusterManagerNamespace = "Sandbox.Game.GameSystems";
+		public static string CubeGridThrusterManagerClass = "MyGridThrustSystem";
 
 		public static string CubeGridThrusterManagerGetEnabled = "get_DampenersEnabled";
 		public static string CubeGridThrusterManagerSetEnabled = "set_DampenersEnabled";
@@ -48,8 +50,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 			{
 				m_dampenersEnabled = value;
 
-				Action action = InternalUpdateDampenersEnabled;
-				SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+				MySandboxGame.Static.Invoke( InternalUpdateDampenersEnabled );
 			}
 		}
 
@@ -65,9 +66,9 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 				Type type = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( CubeGridThrusterManagerNamespace, CubeGridThrusterManagerClass );
 				if ( type == null )
 					throw new Exception( "Could not find type for CubeGridThrusterManager" );
-				result &= BaseObject.HasMethod( type, CubeGridThrusterManagerGetEnabled );
-				result &= BaseObject.HasMethod( type, CubeGridThrusterManagerSetEnabled );
-				result &= BaseObject.HasMethod( type, CubeGridThrusterManagerSetControlEnabled );
+				result &= Reflection.HasMethod( type, CubeGridThrusterManagerGetEnabled );
+				result &= Reflection.HasMethod( type, CubeGridThrusterManagerSetEnabled );
+				result &= Reflection.HasMethod( type, CubeGridThrusterManagerSetControlEnabled );
 
 				return result;
 			}

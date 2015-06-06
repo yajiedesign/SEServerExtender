@@ -3,7 +3,9 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System;
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
@@ -14,8 +16,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 		private bool m_isActive;
 
-		public static string CameraBlockNamespace = "";
-		public static string CameraBlockClass = "=QCcadxxSGXM4pmvgJ0k26zE4nB=";
+		public static string CameraBlockNamespace = "Sandbox.Game.Entities";
+		public static string CameraBlockClass = "MyCameraBlock";
 
 		public static string CameraBlockGetIsActiveMethod = "get_IsActive";
 		public static string CameraBlockSetIsActiveMethod = "set_IsActive";
@@ -89,8 +91,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 
 				if ( BackingObject != null && ActualObject != null )
 				{
-					Action action = InternalUpdateCameraIsActive;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateCameraIsActive );
 				}
 			}
 		}
@@ -109,8 +110,8 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				if ( type == null )
 					throw new Exception( "Could not find internal type for CameraBlockEntity" );
 
-				result &= HasMethod( type, CameraBlockGetIsActiveMethod );
-				result &= HasMethod( type, CameraBlockSetIsActiveMethod );
+				result &= Reflection.HasMethod( type, CameraBlockGetIsActiveMethod );
+				result &= Reflection.HasMethod( type, CameraBlockSetIsActiveMethod );
 
 				return result;
 			}

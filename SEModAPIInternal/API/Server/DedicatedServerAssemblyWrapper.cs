@@ -8,64 +8,55 @@
 	using System.Runtime.InteropServices;
 	using System.Security;
 	using Havok;
+	using Sandbox;
+	using Sandbox.Game;
+	using SEModAPI.API.Sandbox;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.API.Entity;
 	using SEModAPIInternal.Support;
+	using SpaceEngineers.Game;
+	using SteamSDK;
 	using VRage.Audio;
+	using VRage.Dedicated;
+	using VRage.FileSystem;
 	using VRage.Input;
-	using VRage.Library.Utils;
-    using SteamSDK;
 
-	public class ServerAssemblyWrapper
+	public class DedicatedServerAssemblyWrapper
 	{
-		private static ServerAssemblyWrapper _instance;
+		private static DedicatedServerAssemblyWrapper _instance;
 		private static Assembly _assembly;
-		//private static AppDomain _domain;
 
-		public static string DedicatedServerNamespace = "";
-		public static string DedicatedServerClass = "Sandbox.AppCode.App.MyProgram";
-
-		public static string DedicatedServerStartupBaseMethod = "RunMain";
+		public const string DedicatedServerNamespace = "VRage.Dedicated";
+		public const string DedicatedServerClass = "DedicatedServer";
+		public const string DedicatedServerRunMainMethod = "RunMain";
 
 		#region "Constructors and Initializers"
 
-		/// <exception cref="SecurityException">A codebase that does not start with "file://" was specified without the required <see cref="T:System.Net.WebPermission" />. </exception>
-		/// <exception cref="BadImageFormatException">Not a valid assembly. -or- assembly was compiled with a later version of the common language runtime than the version that is currently loaded.</exception>
-		/// <exception cref="FileLoadException">A file that was found could not be loaded. </exception>
-		/// <exception cref="FileNotFoundException">Assembly is not found, or the module you are trying to load does not specify a filename extension. </exception>
-		/// <exception cref="PathTooLongException">The assembly name is longer than MAX_PATH characters.</exception>
-		/// <exception cref="AppDomainUnloadedException">The operation is attempted on an unloaded application domain. </exception>
-		protected ServerAssemblyWrapper( )
+		protected DedicatedServerAssemblyWrapper( )
 		{
 			_instance = this;
 
-			string assemblyPath = Path.Combine( AppDomain.CurrentDomain.BaseDirectory, "SpaceEngineersDedicated.exe" );
+			string assemblyPath = Path.Combine( AppDomain.CurrentDomain.BaseDirectory, "VRage.Dedicated.dll" );
 			_assembly = Assembly.UnsafeLoadFrom( assemblyPath );
 
-			ApplicationLog.BaseLog.Info( "Finished loading ServerAssemblyWrapper" );
+			ApplicationLog.BaseLog.Info( "Finished loading DedicatedServerAssemblyWrapper" );
 		}
 
 		#endregion "Constructors and Initializers"
 
 		#region "Properties"
 
-		public static ServerAssemblyWrapper Instance
+		public static DedicatedServerAssemblyWrapper Instance
 		{
-			get { return _instance ?? ( _instance = new ServerAssemblyWrapper( ) ); }
+			get { return _instance ?? ( _instance = new DedicatedServerAssemblyWrapper( ) ); }
 		}
 
 		public static Type InternalType
 		{
 			get
 			{
-				if ( _assembly == null )
-				{
-					byte[ ] b = File.ReadAllBytes( "SpaceEngineersDedicated.exe" );
-					_assembly = Assembly.Load( b );
-				}
-
-				Type dedicatedServerType = _assembly.GetType( DedicatedServerNamespace + "." + DedicatedServerClass );
-				return dedicatedServerType;
+				return typeof( DedicatedServer );
 			}
 		}
 
@@ -77,11 +68,11 @@
 		{
 			try
 			{
-				Type type1 = InternalType;
-				if ( type1 == null )
-					throw new Exception( "Could not find internal type for ServerAssemblyWrapper" );
+				Type dedicatedServerType = InternalType;
+				if ( dedicatedServerType == null )
+					throw new Exception( "Could not find internal type for DedicatedServerAssemblyWrapper" );
 				bool result = true;
-				result &= BaseObject.HasMethod( type1, DedicatedServerStartupBaseMethod );
+				result &= Reflection.HasMethod( dedicatedServerType, DedicatedServerRunMainMethod );
 
 				return result;
 			}
@@ -173,7 +164,7 @@
 		{
 			try
 			{
-				SandboxGameAssemblyWrapper.Instance.SetNullRender( true );
+				Sandbox.Engine.Platform.Game.IsDedicated = true;
 				MyFileSystem.Reset( );
 
 				//Prepare the parameters
@@ -185,10 +176,18 @@
 					useConsole
 				};
 
-				//Start the server
-				MethodInfo serverStartupMethod = InternalType.GetMethod( DedicatedServerStartupBaseMethod, BindingFlags.Static | BindingFlags.NonPublic );
-				serverStartupMethod.Invoke( null, methodParams );
+				//Initialize config
+				SpaceEngineersGame.SetupPerGameSettings();
+				MyPerGameSettings.SendLogToKeen = DedicatedServer.SendLogToKeen;
+				MyPerServerSettings.GameName = MyPerGameSettings.GameName;
+				MyPerServerSettings.GameNameSafe = MyPerGameSettings.GameNameSafe;
+				MyPerServerSettings.GameDSName = MyPerServerSettings.GameNameSafe + "Dedicated";
+				MyPerServerSettings.GameDSDescription = "Your place for space engineering, destruction and exploring.";
+				MyPerServerSettings.AppId = 0x3bc72;
 
+				//Start the server
+				MethodInfo dedicatedServerRunMainMethod = InternalType.GetMethod( DedicatedServerRunMainMethod, BindingFlags.Static | BindingFlags.NonPublic );
+				dedicatedServerRunMainMethod.Invoke( null, methodParams );
 				return true;
 			}
 			catch ( Win32Exception ex )
@@ -246,8 +245,7 @@
 				TimeSpan cleanupTime = DateTime.Now - startedEntityCleanup;
 				ApplicationLog.BaseLog.Debug("Took " + cleanupTime.TotalSeconds.ToString() + " seconds to clean up entities");
 				*/
-				Object mainGame = SandboxGameAssemblyWrapper.MainGame;
-				BaseObject.InvokeEntityMethod( mainGame, "Dispose" );
+				MySandboxGame.Static.Exit( );
 			}
 			catch ( Exception ex )
 			{

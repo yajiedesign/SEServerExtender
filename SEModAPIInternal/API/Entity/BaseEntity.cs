@@ -5,14 +5,17 @@ namespace SEModAPIInternal.API.Entity
 	using System.IO;
 	using System.Runtime.Serialization;
 	using Havok;
-	using Microsoft.Xml.Serialization.GeneratedAssembly;
-	using Sandbox.Common.Components;
-	using Sandbox.Common.ObjectBuilders;
-	using Sandbox.ModAPI;
+	using Sandbox;
+	using SEModAPI.API;
 	using SEModAPI.API.TypeConverters;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.API.Utility;
 	using SEModAPIInternal.Support;
+	using VRage;
+	using VRage.Components;
+	using VRage.ModAPI;
+	using VRage.ObjectBuilders;
 	using VRageMath;
 
 	[DataContract( Name = "BaseEntityProxy" )]
@@ -31,22 +34,20 @@ namespace SEModAPIInternal.API.Entity
 		private string m_displayName;
 
 		//Definition
-		public static string BaseEntityNamespace = "";
+		public static string BaseEntityNamespace = "Sandbox.Game.Entities";
 
-		public static string BaseEntityClass = "Sandbox.Game.Entities.MyEntity";
+		public static string BaseEntityClass = "MyEntity";
 
 		//Methods
 		public static string BaseEntityGetObjectBuilderMethod = "GetObjectBuilder";
 
 		public static string BaseEntityGetPhysicsManagerMethod = "get_Physics";
 
-		//public static string BaseEntityCombineOnMovedEventMethod = "04F6493DF187FBA38C2B379BA9484304";
 		public static string BaseEntityCombineOnClosedEventMethod = "add_OnClose";
 
 		public static string BaseEntityGetIsDisposedMethod = "get_Closed";
 		public static string BaseEntityGetOrientationMatrixMethod = "get_WorldMatrix";
 
-		//public static string BaseEntityGetNetManagerMethod = "F4456F82186EC3AE6C73294FA6C0A11D";
 		public static string BaseEntityGetNetManagerMethod = "SyncObject";
 
 		public static string BaseEntitySetEntityIdMethod = "set_EntityId";
@@ -60,8 +61,8 @@ namespace SEModAPIInternal.API.Entity
 
 		//////////////////////////////////////////////////////////
 
-		public static string PhysicsManagerNamespace = "";
-		public static string PhysicsManagerClass = "=wF2nlwFYbuUxt9MEr3pF84L4ho=";
+		public static string PhysicsManagerNamespace = "Sandbox.Engine.Physics";
+		public static string PhysicsManagerClass = "MyPhysicsBody";
 		public static string PhysicsManagerGetRigidBodyMethod = "get_RigidBody";
 
 		#endregion "Attributes"
@@ -138,8 +139,7 @@ namespace SEModAPIInternal.API.Entity
 				GameEntityManager.AddEntity( EntityId, this );
 			}
 
-			Action action = InternalRegisterEntityMovedEvent;
-			SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+			MySandboxGame.Static.Invoke( InternalRegisterEntityMovedEvent );
 		}
 
 		#endregion "Constructors and Initializers"
@@ -209,8 +209,7 @@ namespace SEModAPIInternal.API.Entity
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateDisplayName;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateDisplayName );
 				}
 			}
 		}
@@ -240,8 +239,7 @@ namespace SEModAPIInternal.API.Entity
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateEntityId;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateEntityId );
 				}
 			}
 		}
@@ -256,6 +254,24 @@ namespace SEModAPIInternal.API.Entity
 			private set
 			{
 				//Do nothing!
+			}
+		}
+
+		[IgnoreDataMember, Category( "Entity" ), Browsable( true ), ReadOnly( ( true ) )]
+		[Description( "Whether or not the entity will be rendered in the world and subject to physics calculations." )]
+		public bool InScene
+		{
+			get { return ObjectBuilder.PersistentFlags.HasFlag( MyPersistentEntityFlags2.InScene ); }
+			private set
+			{
+				if ( value )
+				{
+					ObjectBuilder.PersistentFlags |= MyPersistentEntityFlags2.InScene;
+				}
+				else
+				{
+					ObjectBuilder.PersistentFlags &= ~MyPersistentEntityFlags2.InScene;
+				}
 			}
 		}
 
@@ -299,10 +315,8 @@ namespace SEModAPIInternal.API.Entity
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdatePosition;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
-					Action action2 = InternalUpdateOrientation;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action2 );
+					MySandboxGame.Static.Invoke( InternalUpdatePosition );
+					MySandboxGame.Static.Invoke( InternalUpdateOrientation );
 				}
 			}
 		}
@@ -320,8 +334,7 @@ namespace SEModAPIInternal.API.Entity
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdatePosition;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdatePosition );
 				}
 			}
 		}
@@ -339,8 +352,7 @@ namespace SEModAPIInternal.API.Entity
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateOrientation;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateOrientation );
 				}
 			}
 		}
@@ -358,8 +370,7 @@ namespace SEModAPIInternal.API.Entity
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateOrientation;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateOrientation );
 				}
 			}
 		}
@@ -390,8 +401,7 @@ namespace SEModAPIInternal.API.Entity
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateLinearVelocity;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateLinearVelocity );
 				}
 			}
 		}
@@ -419,8 +429,7 @@ namespace SEModAPIInternal.API.Entity
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateAngularVelocity;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateAngularVelocity );
 				}
 			}
 		}
@@ -448,8 +457,7 @@ namespace SEModAPIInternal.API.Entity
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateMaxLinearVelocity;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateMaxLinearVelocity );
 				}
 			}
 		}
@@ -557,8 +565,7 @@ namespace SEModAPIInternal.API.Entity
 				{
 					m_networkManager.RemoveEntity( );
 
-					Action action = InternalRemoveEntity;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalRemoveEntity );
 				}
 			}
 
@@ -577,7 +584,7 @@ namespace SEModAPIInternal.API.Entity
 
 		public override void Export( FileInfo fileInfo )
 		{
-			BaseObjectManager.SaveContentFile<MyObjectBuilder_EntityBase, MyObjectBuilder_EntityBaseSerializer>( ObjectBuilder, fileInfo );
+			MyObjectBuilderSerializer.SerializeXML( fileInfo.FullName, false, ObjectBuilder );
 		}
 
 		new public MyObjectBuilder_EntityBase Export( )
@@ -593,30 +600,30 @@ namespace SEModAPIInternal.API.Entity
 				if ( type == null )
 					throw new Exception( "Could not find internal type for BaseEntity" );
 				bool result = true;
-				result &= HasMethod( type, BaseEntityGetObjectBuilderMethod );
-				result &= HasMethod( type, BaseEntityGetPhysicsManagerMethod );
-				result &= HasMethod( type, BaseEntityGetPositionManagerMethod );
+				result &= Reflection.HasMethod( type, BaseEntityGetObjectBuilderMethod );
+				result &= Reflection.HasMethod( type, BaseEntityGetPhysicsManagerMethod );
+				result &= Reflection.HasMethod( type, BaseEntityGetPositionManagerMethod );
 				//result &= HasMethod(type, BaseEntityCombineOnMovedEventMethod);
-				result &= HasMethod( type, BaseEntityCombineOnClosedEventMethod );
-				result &= HasMethod( type, BaseEntityGetIsDisposedMethod );
-				result &= HasMethod( type, BaseEntityGetOrientationMatrixMethod );
+				result &= Reflection.HasMethod( type, BaseEntityCombineOnClosedEventMethod );
+				result &= Reflection.HasMethod( type, BaseEntityGetIsDisposedMethod );
+				result &= Reflection.HasMethod( type, BaseEntityGetOrientationMatrixMethod );
 				//result &= HasMethod( type, BaseEntityGetNetManagerMethod );
 				result &= HasProperty( type, BaseEntityGetNetManagerMethod );
-				result &= HasMethod( type, BaseEntitySetEntityIdMethod );
-				result &= HasMethod( type, BaseEntityGetDisplayNameMethod );
-				result &= HasMethod( type, BaseEntitySetDisplayNameMethod );
-				result &= HasField( type, BaseEntityEntityIdField );				
+				result &= Reflection.HasMethod( type, BaseEntitySetEntityIdMethod );
+				result &= Reflection.HasMethod( type, BaseEntityGetDisplayNameMethod );
+				result &= Reflection.HasMethod( type, BaseEntitySetDisplayNameMethod );
+				result &= Reflection.HasField( type, BaseEntityEntityIdField );
 
 				Type type2 = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( PhysicsManagerNamespace, PhysicsManagerClass );
 				if ( type2 == null )
 					throw new Exception( "Could not find physics manager type for BaseEntity" );
-				result &= HasMethod( type2, PhysicsManagerGetRigidBodyMethod );
+				result &= Reflection.HasMethod( type2, PhysicsManagerGetRigidBodyMethod );
 
 				return result;
 			}
 			catch ( Exception ex )
 			{
-				ApplicationLog.BaseLog.Error(  ex );
+				ApplicationLog.BaseLog.Error( ex );
 				return false;
 			}
 		}
@@ -660,7 +667,7 @@ namespace SEModAPIInternal.API.Entity
 		{
 			try
 			{
-				Object result = GetEntityPropertyValue(entity, BaseEntityGetNetManagerMethod);
+				Object result = GetEntityPropertyValue( entity, BaseEntityGetNetManagerMethod );
 				//Object result = InvokeEntityMethod( entity, BaseEntityGetNetManagerMethod );
 
 				return result;
@@ -732,7 +739,7 @@ namespace SEModAPIInternal.API.Entity
 
 				Vector3D newPosition = m_positionOrientation.Position;
 
-				if (SandboxGameAssemblyWrapper.IsDebugging)
+				if (ExtenderOptions.IsDebugging)
 				{
 					ApplicationLog.BaseLog.Debug((this.GetType().Name + " - Changing position of '" + Name + "' from '" + havokBody.Position.ToString() + "' to '" + newPosition.ToString() + "'");
 				}
@@ -745,7 +752,7 @@ namespace SEModAPIInternal.API.Entity
 					return;
 
 				Vector3D newPosition = m_positionOrientation.Position;
-				if ( SandboxGameAssemblyWrapper.IsDebugging )
+				if ( ExtenderOptions.IsDebugging )
 				{
 					ApplicationLog.BaseLog.Debug( "{0} - Changing position of '{1}' from '{2}' to '{3}'", GetType( ).Name, Name, entity.GetPosition( ).ToString( ), newPosition.ToString( ) );
 				}
@@ -784,7 +791,7 @@ namespace SEModAPIInternal.API.Entity
 				if ( havokBody == null )
 					return;
 
-				if ( SandboxGameAssemblyWrapper.IsDebugging )
+				if ( ExtenderOptions.IsDebugging )
 				{
 					ApplicationLog.BaseLog.Debug( "{0} - Changing linear velocity of '{1}' from '{2}' to '{3}'", GetType( ).Name, Name, havokBody.LinearVelocity, m_linearVelocity );
 				}
@@ -805,7 +812,7 @@ namespace SEModAPIInternal.API.Entity
 				if ( havokBody == null )
 					return;
 
-				if ( SandboxGameAssemblyWrapper.IsDebugging )
+				if ( ExtenderOptions.IsDebugging )
 				{
 					ApplicationLog.BaseLog.Debug( "{0} - Changing angular velocity of '{1}' from '{2}' to '{3}'", GetType( ).Name, Name, havokBody.AngularVelocity.ToString( ), m_angularVelocity.ToString( ) );
 				}
@@ -822,7 +829,7 @@ namespace SEModAPIInternal.API.Entity
 		{
 			try
 			{
-				if ( SandboxGameAssemblyWrapper.IsDebugging )
+				if ( ExtenderOptions.IsDebugging )
 					ApplicationLog.BaseLog.Debug( "{0} '{1}': Calling 'Close' to remove entity", GetType( ).Name, Name );
 
 				InvokeEntityMethod( BackingObject, "Close" );
@@ -903,10 +910,9 @@ namespace SEModAPIInternal.API.Entity
 		private BaseEntity m_parent;
 		private Object m_networkManager;
 
-		public static string BaseEntityNetworkManagerNamespace = "";
-		public static string BaseEntityNetworkManagerClass = "=uTZ4uCH8frEHtn0VfQJ0coHE2v=";
+		public static string BaseEntityNetworkManagerNamespace = "Sandbox.Game.Multiplayer";
+		public static string BaseEntityNetworkManagerClass = "MySyncEntity";
 
-		//public static string BaseEntityBroadcastRemovalMethod = "5EBE421019EACEA0F25718E2585CF3D2";
 		public static string BaseEntityBroadcastRemovalMethod = "SendCloseRequest";
 
 		//Packets
@@ -941,7 +947,7 @@ namespace SEModAPIInternal.API.Entity
 
 		public static void BroadcastRemoveEntity( IMyEntity entity, bool safe = true )
 		{
-			Object result = BaseObject.GetEntityPropertyValue(entity, BaseEntity.BaseEntityGetNetManagerMethod);
+			Object result = BaseObject.GetEntityPropertyValue( entity, BaseEntity.BaseEntityGetNetManagerMethod );
 			//Object result = BaseEntity.InvokeEntityMethod( entity, BaseEntity.BaseEntityGetNetManagerMethod );
 			if ( result == null )
 				return;
@@ -983,7 +989,7 @@ namespace SEModAPIInternal.API.Entity
 				Type type = InternalType;
 				if ( type == null )
 					throw new Exception( "Could not find internal type for BaseEntityNetworkManager" );
-				bool result = BaseObject.HasMethod( type, BaseEntityBroadcastRemovalMethod );
+				bool result = Reflection.HasMethod( type, BaseEntityBroadcastRemovalMethod );
 
 				return result;
 			}
@@ -999,8 +1005,7 @@ namespace SEModAPIInternal.API.Entity
 			if ( NetworkManager == null )
 				return;
 
-			Action action = InternalRemoveEntity;
-			SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+			MySandboxGame.Static.Invoke( InternalRemoveEntity );
 		}
 
 		protected void InternalRemoveEntity( )

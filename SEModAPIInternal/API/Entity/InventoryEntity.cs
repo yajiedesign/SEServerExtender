@@ -7,12 +7,13 @@ namespace SEModAPIInternal.API.Entity
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
 	using Sandbox.Common.ObjectBuilders;
-	using Sandbox.Common.ObjectBuilders.Serializer;
 	using Sandbox.Definitions;
 	using Sandbox.ModAPI.Interfaces;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 	using VRage;
+	using VRage.ObjectBuilders;
 	using IMyInventory = Sandbox.ModAPI.IMyInventory;
 
 	public struct InventoryDelta
@@ -32,8 +33,8 @@ namespace SEModAPIInternal.API.Entity
 		private InventoryItemManager m_itemManager;
 		private Queue<InventoryDelta> m_itemDeltaQueue;
 
-		public static string InventoryNamespace = "";
-		public static string InventoryClass = "=mazFMfE1HhxL19l3plK4hvEmGA=";
+		public static string InventoryNamespace = "Sandbox.Game";
+		public static string InventoryClass = "MyInventory";
 
 		public static string InventoryCalculateMassVolumeMethod = "RefreshVolumeAndMass";
 		public static string InventoryGetTotalVolumeMethod = "get_CurrentVolume";
@@ -201,20 +202,20 @@ namespace SEModAPIInternal.API.Entity
 				if ( type == null )
 					throw new Exception( "Could not find internal type for InventoryEntity" );
 				bool result = true;
-				result &= HasMethod( type, InventoryCalculateMassVolumeMethod );
-				result &= HasMethod( type, InventoryGetTotalVolumeMethod );
-				result &= HasMethod( type, InventoryGetTotalMassMethod );
-				result &= HasMethod( type, InventorySetFromObjectBuilderMethod );
-				result &= HasMethod( type, InventoryGetObjectBuilderMethod );
-				result &= HasMethod( type, InventoryCleanUpMethod );
-				result &= HasMethod( type, InventoryGetItemListMethod );
-				result &= HasMethod( type, InventoryAddItemAmountMethod );
+				result &= Reflection.HasMethod( type, InventoryCalculateMassVolumeMethod );
+				result &= Reflection.HasMethod( type, InventoryGetTotalVolumeMethod );
+				result &= Reflection.HasMethod( type, InventoryGetTotalMassMethod );
+				result &= Reflection.HasMethod( type, InventorySetFromObjectBuilderMethod );
+				result &= Reflection.HasMethod( type, InventoryGetObjectBuilderMethod );
+				result &= Reflection.HasMethod( type, InventoryCleanUpMethod );
+				result &= Reflection.HasMethod( type, InventoryGetItemListMethod );
+				result &= Reflection.HasMethod( type, InventoryAddItemAmountMethod );
 
 				Type[ ] argTypes = new Type[ 3 ];
 				argTypes[ 0 ] = typeof( MyFixedPoint );
 				argTypes[ 1 ] = typeof( MyObjectBuilder_PhysicalObject );
 				argTypes[ 2 ] = typeof( bool );
-				result &= HasMethod( type, InventoryRemoveItemAmountMethod, argTypes );
+				result &= Reflection.HasMethod( type, InventoryRemoveItemAmountMethod, argTypes );
 
 				return result;
 			}
@@ -357,7 +358,7 @@ namespace SEModAPIInternal.API.Entity
 			m_itemDeltaQueue.Enqueue(delta);
 
 			Action action = InternalUpdateItemAmount;
-			SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction(action);
+			MySandboxGame.Static.Invoke(action);
 			 */
 		}
 
@@ -423,12 +424,12 @@ namespace SEModAPIInternal.API.Entity
 
 		private InventoryEntity m_parentContainer;
 
-		public static string InventoryItemNamespace = "";
-		public static string InventoryItemClass = "=Jm6LVWsHj1NFGuqtqTheDghSPX=";
+		public static string InventoryItemNamespace = "Sandbox.Game";
+		public static string InventoryItemClass = "MyInventoryItem";
 
 		public static string InventoryItemGetObjectBuilderMethod = "GetObjectBuilder";
 
-		public static string InventoryItemItemIdField = "=4E6roGfagvQcqDT8xP531wSsud=";
+		public static string InventoryItemItemIdField = "ItemId";
 
 		#endregion "Attributes"
 
@@ -707,8 +708,8 @@ namespace SEModAPIInternal.API.Entity
 				if ( type == null )
 					throw new Exception( "Could not find internal type for InventoryItemEntity" );
 				bool result = true;
-				result &= HasMethod( type, InventoryItemGetObjectBuilderMethod );
-				result &= HasField( type, InventoryItemItemIdField );
+				result &= Reflection.HasMethod( type, InventoryItemGetObjectBuilderMethod );
+				result &= Reflection.HasField( type, InventoryItemItemIdField );
 
 				return result;
 			}

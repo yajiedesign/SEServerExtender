@@ -4,6 +4,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System.ComponentModel;
 	using System.Runtime.Serialization;
 	using Sandbox.Common.ObjectBuilders;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
 
@@ -12,10 +13,10 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	{
 		#region "Attributes"
 
-		public static string RotorNamespace = "";
-		public static string RotorClass = "=6Wy9Sq1bSnd1NU3pZEtIJjR4rJ=";
+		public static string RotorNamespace = "Sandbox.Game.Entities.Cube";
+		public static string RotorClass = "MyMotorStator";
 
-		public static string RotorTopBlockEntityIdField = "=3VfRAqLnpYlKKw2kDSOSyVqUsR=";
+		public static string RotorTopBlockEntityIdField = "m_rotorBlockId";
 
 		#endregion "Attributes"
 
@@ -119,7 +120,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 				if ( type == null )
 					throw new Exception( "Could not find internal type for RotorEntity" );
 
-				result &= HasField( type, RotorTopBlockEntityIdField );
+				result &= Reflection.HasField( type, RotorTopBlockEntityIdField );
 
 				return result;
 			}

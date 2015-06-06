@@ -82,6 +82,7 @@
     <Compile Include="API\Common\GameEntityManager.cs" />
     <Compile Include="API\Common\GameObjectRegistry.cs" />
     <Compile Include="API\Common\NetworkManager.cs" />
+    <Compile Include="API\Common\PathManager.cs" />
     <Compile Include="API\Common\PlayerManager.cs" />
     <Compile Include="API\Common\PowerManager.cs" />
     <Compile Include="API\Common\RadioManager.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="API\Entity\Sector\SectorObject\CubeGridEntity.cs" />
     <Compile Include="API\Entity\Sector\SectorObject\CubeGridManagerManager.cs" />
     <Compile Include="API\Entity\Sector\SectorObject\CubeGridNetworkManager.cs" />
+    <Compile Include="API\Entity\Sector\SectorObject\CubeGrid\CubeBlock\AirVentEntity.cs" />
     <Compile Include="API\Entity\Sector\SectorObject\CubeGrid\CubeBlock\AntennaEntity.cs" />
     <Compile Include="API\Entity\Sector\SectorObject\CubeGrid\CubeBlock\AssemblerEntity.cs" />
     <Compile Include="API\Entity\Sector\SectorObject\CubeGrid\CubeBlock\BatteryBlockEntity.cs" />
@@ -152,7 +154,7 @@
     <Compile Include="API\Entity\Sector\SectorObject\Meteor.cs" />
     <Compile Include="API\Entity\Sector\SectorObject\VoxelMap.cs" />
     <Compile Include="API\Common\SandboxGameAssemblyWrapper.cs" />
-    <Compile Include="API\Server\ServerAssemblyWrapper.cs" />
+    <Compile Include="API\Server\DedicatedServerAssemblyWrapper.cs" />
     <Compile Include="AssemblyFileVersion.cs">
       <DependentUpon>AssemblyFileVersion.tt</DependentUpon>
       <AutoGen>True</AutoGen>
@@ -167,9 +169,10 @@
     <Reference Include="HavokWrapper">
       <HintPath>..\GameLibraries\HavokWrapper.dll</HintPath>
     </Reference>
-    <Reference Include="NLog, Version=3.2.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="NLog, Version=3.2.1.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NLog.3.2.0.0\lib\net40\NLog.dll</HintPath>
+      <HintPath>..\packages\NLog.3.2.1\lib\net40\NLog.dll</HintPath>
     </Reference>
     <Reference Include="Sandbox.Common">
       <HintPath>..\GameLibraries\Sandbox.Common.dll</HintPath>
@@ -180,17 +183,28 @@
     <Reference Include="Sandbox.Game">
       <HintPath>..\GameLibraries\Sandbox.Game.dll</HintPath>
     </Reference>
+    <Reference Include="SpaceEngineers.Game">
+      <HintPath>..\GameLibraries\SpaceEngineers.Game.dll</HintPath>
+    </Reference>
     <Reference Include="SteamSDK">
       <HintPath>..\GameLibraries\SteamSDK.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceProcess" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
     <Reference Include="VRage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\GameLibraries\VRage.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Dedicated">
+      <HintPath>..\GameLibraries\VRage.Dedicated.dll</HintPath>
+    </Reference>
+    <Reference Include="VRage.Game">
+      <HintPath>..\GameLibraries\VRage.Game.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Library">
       <HintPath>..\GameLibraries\VRage.Library.dll</HintPath>

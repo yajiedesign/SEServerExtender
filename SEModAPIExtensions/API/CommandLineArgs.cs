@@ -4,7 +4,10 @@ namespace SEModAPIExtensions.API
 	{
 		public bool AutoStart;
 		public string WorldName;
-		public string InstanceName;
+		/// <summary>The name of the game instance to load</summary>
+		public string InstanceName { get; set; }
+		/// <summary>The path to the instance folder</summary>
+		public string InstancePath;
 		/// <summary>Do not show the local GUI, if true.</summary>
 		public bool NoGui;
 		/// <summary>Do not show a command-line console, if true.</summary>
@@ -16,12 +19,12 @@ namespace SEModAPIExtensions.API
 		/// <summary>Disable WCF services, if true.</summary>
 		public bool NoWcf;
 		public int Autosave;
-		public string Path;
 		public bool CloseOnCrash;
 		public bool AutoSaveSync;
 		public bool RestartOnCrash;
 		public bool WorldRequestReplace;
 		public bool WorldDataModify;
+        public bool WorldVoxelModify;
 		public string Args;
 	}
 }

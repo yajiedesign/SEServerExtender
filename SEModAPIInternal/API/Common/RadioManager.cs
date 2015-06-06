@@ -2,6 +2,8 @@ namespace SEModAPIInternal.API.Common
 {
 	using System;
 	using System.ComponentModel;
+	using Sandbox;
+	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Entity;
 	using SEModAPIInternal.Support;
 
@@ -17,19 +19,17 @@ namespace SEModAPIInternal.API.Common
 		private bool m_isEnabled;
 		private int m_aabbTreeId;
 
-		public static string RadioManagerNamespace = "";
-		public static string RadioManagerClass = "=CwVM7BADbqpHpB6u9jbaBjpyXD=";
+		public static string RadioManagerNamespace = "Sandbox.Game.Entities.Cube";
+		public static string RadioManagerClass = "MyRadioBroadcaster";
 
 		public static string RadioManagerGetBroadcastRadiusMethod = "get_BroadcastRadius";
 		public static string RadioManagerSetBroadcastRadiusMethod = "set_BroadcastRadius";
-		//public static string RadioManagerGetLinkedEntityMethod = "7DE57FDDF37DD6219A990596E0283F01";
-		//public static string RadioManagerSetLinkedEntityMethod = "1C653F74AF87659F7AA9B39E35D789CE";
 		public static string RadioManagerGetEnabledMethod = "get_Enabled";
 		public static string RadioManagerSetEnabledMethod = "set_Enabled";
 		public static string RadioManagerGetAABBTreeIdMethod = "get_RadioProxyID";
 		public static string RadioManagerSetAABBTreeIdMethod = "set_RadioProxyID";
 
-		public static string RadioManagerNetworkManagerField = "=gNAvpmtOwXYmmcG9ynRDGRitUw=";
+		public static string RadioManagerNetworkManagerField = "SyncObject";
 
 		#endregion "Attributes"
 
@@ -75,8 +75,7 @@ namespace SEModAPIInternal.API.Common
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateBroadcastRadius;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateBroadcastRadius );
 				}
 			}
 		}
@@ -93,8 +92,7 @@ namespace SEModAPIInternal.API.Common
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateLinkedEntity;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateLinkedEntity );
 				}
 			}
 		}
@@ -110,8 +108,7 @@ namespace SEModAPIInternal.API.Common
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateEnabled;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateEnabled );
 				}
 			}
 		}
@@ -127,8 +124,7 @@ namespace SEModAPIInternal.API.Common
 
 				if ( BackingObject != null )
 				{
-					Action action = InternalUpdateTreeId;
-					SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+					MySandboxGame.Static.Invoke( InternalUpdateTreeId );
 				}
 			}
 		}
@@ -145,15 +141,15 @@ namespace SEModAPIInternal.API.Common
 				if ( type1 == null )
 					throw new Exception( "Could not find internal type for RadioManager" );
 				bool result = true;
-				result &= BaseObject.HasMethod( type1, RadioManagerGetBroadcastRadiusMethod );
-				result &= BaseObject.HasMethod( type1, RadioManagerSetBroadcastRadiusMethod );
+				result &= Reflection.HasMethod( type1, RadioManagerGetBroadcastRadiusMethod );
+				result &= Reflection.HasMethod( type1, RadioManagerSetBroadcastRadiusMethod );
 				//result &= BaseObject.HasMethod( type1, RadioManagerGetLinkedEntityMethod );
 				//result &= BaseObject.HasMethod( type1, RadioManagerSetLinkedEntityMethod );
-				result &= BaseObject.HasMethod( type1, RadioManagerGetEnabledMethod );
-				result &= BaseObject.HasMethod( type1, RadioManagerSetEnabledMethod );
-				result &= BaseObject.HasMethod( type1, RadioManagerGetAABBTreeIdMethod );
-				result &= BaseObject.HasMethod( type1, RadioManagerSetAABBTreeIdMethod );
-				result &= BaseObject.HasField( type1, RadioManagerNetworkManagerField );
+				result &= Reflection.HasMethod( type1, RadioManagerGetEnabledMethod );
+				result &= Reflection.HasMethod( type1, RadioManagerSetEnabledMethod );
+				result &= Reflection.HasMethod( type1, RadioManagerGetAABBTreeIdMethod );
+				result &= Reflection.HasMethod( type1, RadioManagerSetAABBTreeIdMethod );
+				result &= Reflection.HasField( type1, RadioManagerNetworkManagerField );
 
 				return result;
 			}
@@ -209,8 +205,8 @@ namespace SEModAPIInternal.API.Common
 
 		private RadioManager m_parent;
 
-		public static string RadioManagerNetManagerNamespace = "";
-		public static string RadioManagerNetManagerClass = "=VoqSmlEdXY72n1HyjX9bKJigDP=";
+		public static string RadioManagerNetManagerNamespace = "Sandbox.Game.Multiplayer";
+		public static string RadioManagerNetManagerClass = "MySyncRadioBroadcaster";
 
 		public static string RadioManagerNetManagerBroadcastRadiusMethod = "SendChangeRadioAntennaRequest";
 		public static string RadioManagerNetManagerBroadcastEnabledMethod = "SendChangeRadioAntennaDisplayName";
@@ -249,8 +245,8 @@ namespace SEModAPIInternal.API.Common
 				if ( type1 == null )
 					throw new Exception( "Could not find internal type for RadioManagerNetworkManager" );
 				bool result = true;
-				result &= BaseObject.HasMethod( type1, RadioManagerNetManagerBroadcastRadiusMethod );
-				result &= BaseObject.HasMethod( type1, RadioManagerNetManagerBroadcastEnabledMethod );
+				result &= Reflection.HasMethod( type1, RadioManagerNetManagerBroadcastRadiusMethod );
+				result &= Reflection.HasMethod( type1, RadioManagerNetManagerBroadcastEnabledMethod );
 
 				return result;
 			}
@@ -263,14 +259,12 @@ namespace SEModAPIInternal.API.Common
 
 		public void BroadcastRadius( )
 		{
-			Action action = InternalBroadcastRadius;
-			SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+			MySandboxGame.Static.Invoke( InternalBroadcastRadius );
 		}
 
 		public void BroadcastEnabled( )
 		{
-			Action action = InternalBroadcastEnabled;
-			SandboxGameAssemblyWrapper.Instance.EnqueueMainGameAction( action );
+			MySandboxGame.Static.Invoke( InternalBroadcastEnabled );
 		}
 
 		#region "Internal"
