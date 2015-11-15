@@ -99,12 +99,6 @@ namespace SEModAPIExtensions.API
 				BaseLog.Warn( "RadioManagerNetworkManager reflection validation failed!" );
 			}
 
-			if (!PowerManager.ReflectionUnitTest())
-			{
-				result = false;
-				BaseLog.Warn( "PowerManager reflection validation failed!" );
-			}
-
 			if (!FactionsManager.ReflectionUnitTest())
 			{
 				result = false;
@@ -159,11 +153,11 @@ namespace SEModAPIExtensions.API
 				BaseLog.Warn("CubeGridEntity reflection validation failed!");
 			}
 
-			if (!CubeGridManagerManager.ReflectionUnitTest())
-			{
-				result = false;
-				BaseLog.Warn("CubeGridManagerManager reflection validation failed!");
-			}
+			//if (!CubeGridManagerManager.ReflectionUnitTest())
+			//{
+			//	result = false;
+			//	BaseLog.Warn("CubeGridManagerManager reflection validation failed!");
+			//}
 
 			if (!CubeGridNetworkManager.ReflectionUnitTest())
 			{
@@ -217,18 +211,6 @@ namespace SEModAPIExtensions.API
 			{
 				result = false;
 				BaseLog.Warn("InventoryItemEntity reflection validation failed!");
-			}
-
-			if (!PowerProducer.ReflectionUnitTest())
-			{
-				result = false;
-				BaseLog.Warn("PowerProducer reflection validation failed!");
-			}
-
-			if (!PowerReceiver.ReflectionUnitTest())
-			{
-				result = false;
-				BaseLog.Warn("PowerReceiver reflection validation failed!");
 			}
 
 			if (!VoxelMap.ReflectionUnitTest())

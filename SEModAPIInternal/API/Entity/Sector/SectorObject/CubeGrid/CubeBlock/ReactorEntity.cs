@@ -5,6 +5,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 	using System.Runtime.Serialization;
 	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
+	using Sandbox.Game.EntityComponents;
 	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.Support;
@@ -15,7 +16,6 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 		#region "Attributes"
 
 		private InventoryEntity m_Inventory;
-		private PowerProducer m_powerProducer;
 		private float m_maxPowerOutput;
 		private DateTime m_lastInventoryRefresh;
 
@@ -33,7 +33,6 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 			: base( parent, definition )
 		{
 			m_Inventory = new InventoryEntity( definition.Inventory );
-			m_powerProducer = new PowerProducer( Parent.PowerManager, null );
 
 			m_lastInventoryRefresh = DateTime.Now;
 		}
@@ -42,7 +41,6 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 			: base( parent, definition, backingObject )
 		{
 			m_Inventory = new InventoryEntity( definition.Inventory, InternalGetReactorInventory( ) );
-			m_powerProducer = new PowerProducer( Parent.PowerManager, ActualObject );
 
 			m_lastInventoryRefresh = DateTime.Now;
 		}
@@ -111,38 +109,6 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock
 			{
 				//Do nothing!
 			}
-		}
-
-		[DataMember]
-		[Category( "Reactor" )]
-		[DisplayName("Max Power Output (MW)")]
-		public float MaxPower
-		{
-			get { return PowerProducer.MaxPowerOutput; }
-			set
-			{
-				m_maxPowerOutput = value;
-
-				MySandboxGame.Static.Invoke( InternalUpdateMaxPowerOutput );
-			}
-		}
-
-		[DataMember]
-		[Category( "Reactor" )]
-		[DisplayName( "Current Power Output (MW)" )]
-		public float Power
-		{
-			get { return PowerProducer.PowerOutput; }
-			set { PowerProducer.PowerOutput = value; }
-		}
-
-		[IgnoreDataMember]
-		[Category( "Reactor" )]
-		[Browsable( false )]
-		[ReadOnly( true )]
-		internal PowerProducer PowerProducer
-		{
-			get { return m_powerProducer; }
 		}
 
 		#endregion "Properties"

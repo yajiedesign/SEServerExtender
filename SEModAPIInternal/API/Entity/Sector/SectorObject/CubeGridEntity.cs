@@ -5,7 +5,6 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 	using System.ComponentModel;
 	using System.IO;
 	using System.Runtime.Serialization;
-	using Microsoft.Xml.Serialization.GeneratedAssembly;
 	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
 	using Sandbox.Definitions;
@@ -15,6 +14,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 	using SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid;
 	using SEModAPIInternal.API.Utility;
 	using SEModAPIInternal.Support;
+	using VRage.ObjectBuilders;
 	using VRageMath;
 
 	[DataContract( Name = "CubeGridEntityProxy" )]
@@ -257,23 +257,23 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 			}
 		}
 
-		[DataMember]
-		[Category( "Cube Grid" )]
-		public bool IsDampenersEnabled
-		{
-			get { return ObjectBuilder.DampenersEnabled; }
-			set
-			{
-				if ( ObjectBuilder.DampenersEnabled == value ) return;
-				ObjectBuilder.DampenersEnabled = value;
-				Changed = true;
+		//[DataMember]
+		//[Category( "Cube Grid" )]
+		//public bool IsDampenersEnabled
+		//{
+		//	get { return ObjectBuilder.DampenersEnabled; }
+		//	set
+		//	{
+		//		if ( ObjectBuilder.DampenersEnabled == value ) return;
+		//		ObjectBuilder.DampenersEnabled = value;
+		//		Changed = true;
 
-				if ( ThrusterManager != null )
-				{
-					ThrusterManager.DampenersEnabled = value;
-				}
-			}
-		}
+		//		if ( ThrusterManager != null )
+		//		{
+		//			ThrusterManager.DampenersEnabled = value;
+		//		}
+		//	}
+		//}
 
 		[IgnoreDataMember]
 		[Category( "Cube Grid" )]
@@ -341,31 +341,18 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 			}
 		}
 
-		[IgnoreDataMember]
-		[Category( "Cube Grid" )]
-		[Browsable( false )]
-		[ReadOnly( true )]
-		public PowerManager PowerManager
-		{
-			get { return _managerManager.PowerManager; }
-			private set
-			{
-				//Do nothing!
-			}
-		}
-
-		[IgnoreDataMember]
-		[Category( "Cube Grid" )]
-		[Browsable( false )]
-		[ReadOnly( true )]
-		public CubeGridThrusterManager ThrusterManager
-		{
-			get { return _managerManager.ThrusterManager; }
-			private set
-			{
-				//Do nothing!
-			}
-		}
+		//[IgnoreDataMember]
+		//[Category( "Cube Grid" )]
+		//[Browsable( false )]
+		//[ReadOnly( true )]
+		//public CubeGridThrusterManager ThrusterManager
+		//{
+		//	get { return _managerManager.ThrusterManager; }
+		//	private set
+		//	{
+		//		//Do nothing!
+		//	}
+		//}
 
 		[IgnoreDataMember]
 		[Category( "Cube Grid" )]
@@ -380,30 +367,6 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 
 				return isLoading;
 			}
-			private set
-			{
-				//Do nothing!
-			}
-		}
-
-		[IgnoreDataMember]
-		[Category( "Cube Grid" )]
-		[ReadOnly( true )]
-		public float TotalPower
-		{
-			get { return PowerManager.TotalPower; }
-			private set
-			{
-				//Do nothing!
-			}
-		}
-
-		[IgnoreDataMember]
-		[Category( "Cube Grid" )]
-		[ReadOnly( true )]
-		public float AvailablePower
-		{
-			get { return PowerManager.AvailablePower; }
 			private set
 			{
 				//Do nothing!
@@ -460,7 +423,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject
 		{
 			RefreshBaseCubeBlocks( );
 
-			BaseObjectManager.SaveContentFile( ObjectBuilder, fileInfo );
+			MyObjectBuilderSerializer.SerializeXML( fileInfo.FullName, false, ObjectBuilder );
 		}
 
 		new public MyObjectBuilder_CubeGrid Export( )

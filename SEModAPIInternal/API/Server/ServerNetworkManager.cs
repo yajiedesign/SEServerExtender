@@ -8,6 +8,7 @@ namespace SEModAPIInternal.API.Server
 	using System.Runtime.ExceptionServices;
 	using System.Security;
 	using System.Threading;
+	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
 	using Sandbox.Common.ObjectBuilders.Definitions;
 	using Sandbox.Common.ObjectBuilders.Voxels;
@@ -42,7 +43,6 @@ namespace SEModAPIInternal.API.Server
 		public static string ServerNetworkManagerClass = "MyDedicatedServer";
 
 		public static string ServerNetworkManagerDisconnectPlayerMethod = "MyDedicatedServer_ClientLeft";
-		public static string ServerNetworkManagerSetPlayerBannedMethod = "BanClient";
 		public static string ServerNetworkManagerKickPlayerMethod = "KickClient";
 
 		public static string ServerNetworkManagerConnectedPlayersField = "m_members";
@@ -161,7 +161,6 @@ namespace SEModAPIInternal.API.Server
 				if ( type1 == null )
 					throw new TypeLoadException( "Could not find internal type for ServerNetworkManager" );
 				bool result = true;
-				result &= Reflection.HasMethod( type1, ServerNetworkManagerSetPlayerBannedMethod );
 				result &= Reflection.HasMethod( type1, ServerNetworkManagerDisconnectPlayerMethod );
 				result &= Reflection.HasMethod( type1, ServerNetworkManagerKickPlayerMethod );
 				result &= Reflection.HasField( type1, ServerNetworkManagerConnectedPlayersField );
@@ -193,14 +192,6 @@ namespace SEModAPIInternal.API.Server
 
 				result &= Reflection.HasField( nestedCreateType, SendCreateCompressedMsgObjectBuilders );
 				result &= Reflection.HasField( nestedCreateType, SendCreateCompressedMsgBuilderLengths );
-
-				Type respawnMsgType = typeof ( MyPlayerCollection.RespawnMsg );
-
-				result &= Reflection.HasField( respawnMsgType, RespawnMsgJoinGame );
-				result &= Reflection.HasField( respawnMsgType, RespawnMsgNewIdenity );
-				result &= Reflection.HasField( respawnMsgType, RespawnMsgMedicalRoom );
-				result &= Reflection.HasField( respawnMsgType, RespawnMsgRespawnShipId );
-				result &= Reflection.HasField( respawnMsgType, RespawnMsgPlayerSerialId );
 
 				Type type6 = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, MySyncCharacterClass );
 				if ( type6 == null )
@@ -265,8 +256,10 @@ namespace SEModAPIInternal.API.Server
 		{
 			try
 			{
-				Object steamServerManager = GetNetworkManager( );
-				BaseObject.InvokeEntityMethod( steamServerManager, ServerNetworkManagerSetPlayerBannedMethod, new object[ ] { remoteUserId, isBanned } );
+				MySandboxGame.Static.Invoke( ( ) =>
+				                             {
+					                             MyMultiplayer.Static.BanClient( remoteUserId, true );
+				                             } );
 
 				KickPlayer( remoteUserId );
 			}
@@ -280,9 +273,12 @@ namespace SEModAPIInternal.API.Server
 		{
 			try
 			{
-				Object steamServerManager = GetNetworkManager( );
-				BaseObject.InvokeEntityMethod( steamServerManager, ServerNetworkManagerKickPlayerMethod, new object[ ] { remoteUserId } );
-				BaseObject.InvokeEntityMethod( steamServerManager, ServerNetworkManagerDisconnectPlayerMethod, new object[ ] { remoteUserId, ChatMemberStateChangeEnum.Kicked } );
+				MyMultiplayerBase steamServerManager = GetNetworkManager( );
+				MySandboxGame.Static.Invoke( ( ) =>
+											 {
+												 MyMultiplayer.Static.KickClient( remoteUserId );
+												 BaseObject.InvokeEntityMethod( steamServerManager, ServerNetworkManagerDisconnectPlayerMethod, new object[ ] { remoteUserId, ChatMemberStateChangeEnum.Kicked } );
+											 } );
 			}
 			catch ( Exception ex )
 			{
@@ -406,24 +402,16 @@ namespace SEModAPIInternal.API.Server
 
 		public static void ShowRespawnMenu( ulong userId )
 		{
-			Type playerCollectionType = SandboxGameAssemblyWrapper.Instance.GetAssemblyType( MultiplayerNamespace, PlayerCollectionClass );
-			Type respawnMsgType = playerCollectionType.GetNestedType( RespawnMsg, BindingFlags.NonPublic | BindingFlags.Public );
+			MyPlayerCollection.RespawnMsg respawnMsg = new MyPlayerCollection.RespawnMsg
+			                                           {
+				                                           JoinGame = true,
+				                                           NewIdentity = true,
+				                                           MedicalRoom = 0,
+				                                           RespawnShipId = "",
+				                                           PlayerSerialId = 0
+			                                           };
 
-			FieldInfo respawnMsgJoinGame = respawnMsgType.GetField( RespawnMsgJoinGame );
-			FieldInfo respawnMsgNewIdentity = respawnMsgType.GetField( RespawnMsgNewIdenity );
-			FieldInfo respawnMsgMedicalRoom = respawnMsgType.GetField( RespawnMsgMedicalRoom );
-			FieldInfo respawnMsgRespawnShipId = respawnMsgType.GetField( RespawnMsgRespawnShipId );
-			FieldInfo respawnMsgPlayerSerialId = respawnMsgType.GetField( RespawnMsgPlayerSerialId );
-
-			object respawnMsg = Activator.CreateInstance( respawnMsgType );
-
-			respawnMsgJoinGame.SetValue( respawnMsg, true );
-			respawnMsgNewIdentity.SetValue( respawnMsg, true );
-			respawnMsgMedicalRoom.SetValue( respawnMsg, 0 );
-			respawnMsgRespawnShipId.SetValue( respawnMsg, "" );
-			respawnMsgPlayerSerialId.SetValue( respawnMsg, 0 );
-
-			SendMessage( respawnMsg, userId, respawnMsgType, 3 );
+			SendMessage( respawnMsg, userId, typeof ( MyPlayerCollection.RespawnMsg ), 3 );
 		}
 
 		public static void AttachToCockpit( long characterId, long cockpitId, ulong steamId )
@@ -884,7 +872,7 @@ namespace SEModAPIInternal.API.Server
 			}
 			catch ( Exception ex )
 			{
-				ApplicationLog.BaseLog.Error( "SendWorldData Error: {0}", ex );
+				ApplicationLog.BaseLog.Error( ex, "SendWorldData Error: {0}", ex );
 			}
 		}
 

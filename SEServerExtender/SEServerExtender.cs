@@ -11,6 +11,7 @@ namespace SEServerExtender
 	using Sandbox;
 	using Sandbox.Common;
 	using Sandbox.Definitions;
+	using Sandbox.Game.Multiplayer;
 	using Sandbox.Game.World;
 	using SEModAPI.API;
 	using SEModAPI.API.Definitions;
@@ -26,6 +27,8 @@ namespace SEServerExtender
 	using SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid;
 	using SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid.CubeBlock;
 	using SEModAPIInternal.Support;
+	using VRage.ModAPI;
+	using VRage.ObjectBuilders;
 	using VRage.Utils;
 	using VRageMath;
 	using Timer = System.Windows.Forms.Timer;
@@ -137,7 +140,8 @@ namespace SEServerExtender
 			{
 				if ( string.IsNullOrEmpty( m_server.CommandLineArgs.InstancePath ) )
 				{
-					List<String> instanceList = GameInstallationInfo.GetCommonInstanceList( );
+					List<string> instanceList = GameInstallationInfo.GetCommonInstanceList( );
+					instanceList.Sort();
 					CMB_Control_CommonInstanceList.BeginUpdate( );
 					CMB_Control_CommonInstanceList.Items.AddRange( instanceList.ToArray( ) );
 					if ( CMB_Control_CommonInstanceList.Items.Count > 0 )
@@ -1579,8 +1583,10 @@ namespace SEServerExtender
 				if ( TRV_Entities.SelectedNode == null )
 					return;
 				Object linkedObject = TRV_Entities.SelectedNode.Tag;
+				
 				if ( linkedObject == null )
 					return;
+				ApplicationLog.BaseLog.Trace( "Object Type: {0}", linkedObject.GetType( ).Name );
 				if ( !( linkedObject is BaseObject ) )
 					return;
 
@@ -1593,11 +1599,12 @@ namespace SEServerExtender
 					FileInfo fileInfo = new FileInfo( saveFileDialog.FileName );
 					try
 					{
+						MyObjectBuilderSerializer.SerializeXML( fileInfo.FullName, false, ( (IMyEntity) objectToExport.BackingObject ).GetObjectBuilder( ) );
 						objectToExport.Export( fileInfo );
 					}
 					catch ( Exception ex )
 					{
-						MessageBox.Show( this, ex.Message );
+						ApplicationLog.BaseLog.Error( ex );
 					}
 				}
 			}
@@ -1936,7 +1943,7 @@ namespace SEServerExtender
 			MyFaction faction = linkedObject as MyFaction;
 			if ( faction != null )
 			{
-				MySession.Static.Factions.RemoveFaction( faction.FactionId );
+				MyFactionCollection.RemoveFaction( faction.FactionId );
 			}
 			if ( linkedObject is MyFactionMember )
 			{

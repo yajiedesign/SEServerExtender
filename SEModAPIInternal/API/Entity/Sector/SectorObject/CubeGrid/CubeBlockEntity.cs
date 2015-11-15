@@ -5,7 +5,6 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid
 	using System.ComponentModel;
 	using System.IO;
 	using System.Runtime.Serialization;
-	using Microsoft.Xml.Serialization.GeneratedAssembly;
 	using Sandbox;
 	using Sandbox.Common.ObjectBuilders;
 	using Sandbox.Definitions;
@@ -16,6 +15,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid
 	using SEModAPIInternal.API.Utility;
 	using SEModAPIInternal.Support;
 	using VRage;
+	using VRage.ObjectBuilders;
 	using VRageMath;
 
 	[DataContract( Name = "CubeBlockEntityProxy" )]
@@ -564,7 +564,7 @@ namespace SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid
 
 		public override void Export( FileInfo fileInfo )
 		{
-			BaseObjectManager.SaveContentFile( ObjectBuilder, fileInfo );
+			MyObjectBuilderSerializer.SerializeXML( fileInfo.FullName, false, ObjectBuilder );
 		}
 
 		new public static bool ReflectionUnitTest( )

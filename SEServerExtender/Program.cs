@@ -43,11 +43,12 @@ namespace SEServerExtender
 
 			protected override void OnStart( string[ ] args )
 			{
-				BaseLog.Info( "Starting SEServerExtender Service with {0} arguments ...", args.Length );
+				BaseLog.Info( "Starting SEServerExtender Service with {0} arguments: {1}", args.Length, string.Join( "\r\n\t", args ) );
 
 			    List<string> listArg = args.ToList();
 			    string serviceName = string.Empty;
                 string gamePath = new DirectoryInfo(PathManager.BasePath).Parent.FullName;
+
                 // Instance autodetect
 			    if (args.All(item => !item.Contains("instance")))
 			    {
@@ -64,6 +65,7 @@ namespace SEServerExtender
                     BaseLog.Info( "Instance detected : {0}", serviceName);
                     listArg.Add("instance=" + serviceName);
 			    }
+
                 // gamepath autodetect
                 if (args.All(item => !item.Contains("gamepath")))
                 {
@@ -139,7 +141,7 @@ namespace SEServerExtender
 
 			//AppDomain.CurrentDomain.ClearEventInvocations("_unhandledException");
 
-			BaseLog.Info( "Starting SEServerExtender with {0} arguments ...", args.Length );
+			BaseLog.Info( "Starting SEServerExtender with {0} arguments: {1}", args.Length, string.Join( "\r\n\t", args ) );
 
 			CommandLineArgs extenderArgs = CommandLineArgs = new CommandLineArgs
 							  {
@@ -183,7 +185,7 @@ namespace SEServerExtender
 					if ( lowerCaseArgument.Equals( "instance" ) )
 					{
 						if ( argValue[ argValue.Length - 1 ] == '"' )
-							argValue = argValue.Substring( 0, argValue.Length - 1 );
+							argValue = argValue.Substring( 1, argValue.Length - 2 );
 						extenderArgs.InstanceName = argValue;
 
 						//Only let this override log path if the log path wasn't already explicitly set
@@ -321,11 +323,6 @@ namespace SEServerExtender
 				}
 			}
 
-			if ( !string.IsNullOrEmpty( extenderArgs.InstancePath ) )
-			{
-				extenderArgs.InstanceName = string.Empty;
-			}
-
 			if ( !Environment.UserInteractive )
 			{
 				extenderArgs.NoConsole = true;
@@ -397,7 +394,7 @@ namespace SEServerExtender
 			catch ( Exception ex )
 			{
 				if ( !extenderArgs.NoConsole )
-					BaseLog.Info( "Exception - {0}", ex );
+					BaseLog.Info( ex, "Exception - {0}", ex );
 				if ( !extenderArgs.NoGui )
 					MessageBox.Show( ex.ToString( ), @"SEServerExtender", MessageBoxButtons.OK, MessageBoxIcon.Error );
 
@@ -442,7 +439,7 @@ namespace SEServerExtender
 
 		public static void Application_ThreadException( Object sender, ThreadExceptionEventArgs e )
 		{
-			BaseLog.Error( "Application Thread Exception", e.Exception );
+			BaseLog.Error( e.Exception, "Application Thread Exception" );
 		}
 
 		public static void AppDomain_UnhandledException( Object sender, UnhandledExceptionEventArgs e )

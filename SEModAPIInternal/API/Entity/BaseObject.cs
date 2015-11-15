@@ -6,14 +6,11 @@ namespace SEModAPIInternal.API.Entity
 	using System.IO;
 	using System.Reflection;
 	using System.Runtime.Serialization;
-	using System.Xml;
-	using Microsoft.Xml.Serialization.GeneratedAssembly;
 	using Sandbox;
 	using Sandbox.Common.ObjectBuilders.Definitions;
 	using Sandbox.Definitions;
 	using SEModAPI.API;
 	using SEModAPI.API.Sandbox;
-	using SEModAPI.API.Utility;
 	using SEModAPIInternal.API.Common;
 	using SEModAPIInternal.API.Entity.Sector.SectorObject;
 	using SEModAPIInternal.API.Entity.Sector.SectorObject.CubeGrid;
@@ -245,7 +242,7 @@ namespace SEModAPIInternal.API.Entity
 
 		public virtual void Export( FileInfo fileInfo )
 		{
-			BaseObjectManager.SaveContentFile( ObjectBuilder, fileInfo );
+			MyObjectBuilderSerializer.SerializeXML( fileInfo.FullName, false, ObjectBuilder );
 		}
 
 		public MyObjectBuilder_Base Export( )
@@ -358,14 +355,14 @@ namespace SEModAPIInternal.API.Entity
 		{
 			try
 			{
-				if ( methodName == null || methodName.Length == 0 )
+				if ( string.IsNullOrEmpty( methodName ) )
 					throw new Exception( "Method name was empty" );
 				MethodInfo method = objectType.GetMethod( methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy );
 				if ( method == null )
 				{
 					//Recurse up through the class heirarchy to try to find the method
 					Type type = objectType;
-					while ( type != typeof( Object ) )
+					while ( type != typeof( object ) )
 					{
 						method = type.GetMethod( methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy );
 						if ( method != null )
@@ -380,7 +377,7 @@ namespace SEModAPIInternal.API.Entity
 			}
 			catch ( Exception ex )
 			{
-				ApplicationLog.BaseLog.Error( "Failed to get static method '" + methodName + "'" );
+				ApplicationLog.BaseLog.Error( $"Failed to get static method '{methodName}'" );
 				if ( ExtenderOptions.IsDebugging )
 					ApplicationLog.BaseLog.Error( Environment.StackTrace );
 				ApplicationLog.BaseLog.Error( ex );
@@ -576,15 +573,14 @@ namespace SEModAPIInternal.API.Entity
 				MethodInfo method = GetStaticMethod( objectType, methodName );
 				if ( method == null )
 					throw new Exception( "Method is empty" );
-				Object result = method.Invoke( null, parameters );
+				object result = method.Invoke( null, parameters );
 
 				return result;
 			}
 			catch ( Exception ex )
 			{
-				ApplicationLog.BaseLog.Error( "Failed to invoke static method '" + methodName + "': " + ex.Message );
-				if ( ExtenderOptions.IsDebugging )
-					ApplicationLog.BaseLog.Error( Environment.StackTrace );
+				ApplicationLog.BaseLog.Error( $"Failed to invoke static method '{methodName}': {ex.Message}" );
+				ApplicationLog.BaseLog.Error( Environment.StackTrace );
 				ApplicationLog.BaseLog.Error( ex );
 				return null;
 			}
@@ -1178,46 +1174,6 @@ namespace SEModAPIInternal.API.Entity
 			MyObjectBuilderSerializer.SerializeXML( filePath, false, fileContent );
 		}
 
-		public static T ReadSpaceEngineersFile<T, TS>( string filename )
-			where TS : XmlSerializer1
-		{
-			XmlReaderSettings settings = new XmlReaderSettings
-			{
-				IgnoreComments = true,
-				IgnoreWhitespace = true,
-			};
-
-			object obj = null;
-
-			if ( File.Exists( filename ) )
-			{
-				using ( XmlReader xmlReader = XmlReader.Create( filename, settings ) )
-				{
-					TS serializer = (TS)Activator.CreateInstance( typeof( TS ) );
-					obj = serializer.Deserialize( xmlReader );
-				}
-			}
-
-			return (T)obj;
-		}
-
-		protected T Deserialize<T>( string xml )
-		{
-			using ( StringReader textReader = new StringReader( xml ) )
-			{
-				return (T)( new XmlSerializerContract( ).GetSerializer( typeof( T ) ).Deserialize( textReader ) );
-			}
-		}
-
-		protected string Serialize<T>( object item )
-		{
-			using ( StringWriter textWriter = new StringWriter( ) )
-			{
-				new XmlSerializerContract( ).GetSerializer( typeof( T ) ).Serialize( textWriter, item );
-				return textWriter.ToString( );
-			}
-		}
-
 		public static bool WriteSpaceEngineersFile( MyObjectBuilder_Base sector, string filename )
 		{
 			// How they appear to be writing the files currently.
@@ -1446,7 +1402,7 @@ namespace SEModAPIInternal.API.Entity
 			m_definitionsContainerField.SetValue( definitionsContainer, baseDefs.ToArray( ) );
 
 			//Save the definitions container out to the file
-			SaveContentFile( definitionsContainer, m_fileInfo );
+			MyObjectBuilderSerializer.SerializeXML( m_fileInfo.FullName, false, definitionsContainer );
 
 			return true;
 		}
