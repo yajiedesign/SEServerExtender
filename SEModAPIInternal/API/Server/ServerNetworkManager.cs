@@ -258,7 +258,7 @@ namespace SEModAPIInternal.API.Server
 			{
 				MySandboxGame.Static.Invoke( ( ) =>
 				                             {
-					                             MyMultiplayer.Static.BanClient( remoteUserId, true );
+					                             MyMultiplayer.Static.BanClient( remoteUserId, isBanned );
 				                             } );
 
 				KickPlayer( remoteUserId );
@@ -406,7 +406,7 @@ namespace SEModAPIInternal.API.Server
 			                                           {
 				                                           JoinGame = true,
 				                                           NewIdentity = true,
-				                                           MedicalRoom = 0,
+														   RespawnEntityId = 0,
 				                                           RespawnShipId = "",
 				                                           PlayerSerialId = 0
 			                                           };

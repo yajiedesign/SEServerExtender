@@ -1,25 +1,28 @@
 namespace SEModAPIInternal.API.Entity
 {
-	using System;
-	using System.Collections.Generic;
-	using System.ComponentModel;
-	using System.IO;
-	using Sandbox;
-	using Sandbox.Common.ObjectBuilders;
-	using Sandbox.Common.ObjectBuilders.Voxels;
-	using Sandbox.Game.Entities;
-	using Sandbox.Game.Multiplayer;
-	using SEModAPI.API;
-	using SEModAPI.API.Utility;
-	using SEModAPIInternal.API.Common;
-	using SEModAPIInternal.API.Entity.Sector;
-	using SEModAPIInternal.API.Entity.Sector.SectorObject;
-	using SEModAPIInternal.API.Utility;
-	using SEModAPIInternal.Support;
-	using VRage.ObjectBuilders;
-	using VRageMath;
+    using System;
+    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.IO;
+    using Sandbox;
+    using Sandbox.Common.ObjectBuilders;
+    using Sandbox.Common.ObjectBuilders.Voxels;
+    using Sandbox.Game.Entities;
+    using Sandbox.Game.Multiplayer;
+    using Sandbox.ModAPI;
+    using SEModAPI.API;
+    using SEModAPI.API.Utility;
+    using SEModAPIInternal.API.Common;
+    using SEModAPIInternal.API.Entity.Sector;
+    using SEModAPIInternal.API.Entity.Sector.SectorObject;
+    using SEModAPIInternal.API.Utility;
+    using SEModAPIInternal.Support;
+    using VRage.ObjectBuilders;
+    using VRageMath;
+    using Sandbox.Engine.Multiplayer;
+    using Sandbox.Game.Replication;
 
-	public class SectorEntity : BaseObject
+    public class SectorEntity : BaseObject
 	{
 		#region "Attributes"
 
@@ -515,7 +518,7 @@ namespace SEModAPIInternal.API.Entity
 				}
 
 				if ( ExtenderOptions.IsDebugging )
-					ApplicationLog.BaseLog.Debug( entity.GetType( ).Name + " '" + entity.Name + "' is being added ..." );
+					ApplicationLog.BaseLog.Debug(String.Format("{0} '{1}': Is being added...", entity.GetType().Name, entity.DisplayName));
 
 				AddEntityQueue.Enqueue( entity );
 
@@ -536,8 +539,8 @@ namespace SEModAPIInternal.API.Entity
 
 				BaseEntity entityToAdd = AddEntityQueue.Dequeue( );
 
-				if ( ExtenderOptions.IsDebugging )
-					ApplicationLog.BaseLog.Debug( entityToAdd.GetType( ).Name + " '" + entityToAdd.GetType( ).Name + "': Adding to scene ..." );
+                if (ExtenderOptions.IsDebugging)
+                    ApplicationLog.BaseLog.Debug(String.Format("{0} '{1}': Adding to scene...", entityToAdd.GetType().Name, entityToAdd.DisplayName));
 
 				//Create the backing object
 				Type entityType = entityToAdd.GetType( );
@@ -547,11 +550,13 @@ namespace SEModAPIInternal.API.Entity
 				entityToAdd.BackingObject = Activator.CreateInstance( internalType );
 
 				//Add the backing object to the main game object manager
+                //I don't think this is actually used anywhere?
 				MyEntity backingObject = (MyEntity)entityToAdd.BackingObject;
-				backingObject.Init( entityToAdd.ObjectBuilder );
-				MyEntities.Add( backingObject );
 
-				if ( entityToAdd is FloatingObject )
+                MyEntity newEntity = MyEntities.CreateFromObjectBuilderAndAdd(entityToAdd.ObjectBuilder);
+                
+
+                if ( entityToAdd is FloatingObject )
 				{
 					try
 					{
@@ -572,11 +577,10 @@ namespace SEModAPIInternal.API.Entity
 					try
 					{
 						//Broadcast the new entity to the clients
-						MyObjectBuilder_EntityBase baseEntity = backingObject.GetObjectBuilder( );
-						MySyncCreate.SendEntityCreated( baseEntity );
-
-						entityToAdd.ObjectBuilder = baseEntity;
-					}
+                        ApplicationLog.BaseLog.Info("Broadcasted entity to clients.");
+                        MyMultiplayer.ReplicateImmediatelly( MyExternalReplicable.FindByObject( newEntity ) );
+                        //the misspelling in this function name is driving me  i n s a n e
+                    }
 					catch ( Exception ex )
 					{
 						ApplicationLog.BaseLog.Error( "Failed to broadcast new entity" );
@@ -587,7 +591,7 @@ namespace SEModAPIInternal.API.Entity
 				if ( ExtenderOptions.IsDebugging )
 				{
 					Type type = entityToAdd.GetType( );
-					ApplicationLog.BaseLog.Debug( type.Name + " '" + entityToAdd.Name + "': Finished adding to scene" );
+					ApplicationLog.BaseLog.Debug(String.Format("{0} '{1}': Finished adding to scene", entityToAdd.GetType().Name, entityToAdd.DisplayName));
 				}
 			}
 			catch ( Exception ex )

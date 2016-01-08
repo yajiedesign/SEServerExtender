@@ -1,24 +1,26 @@
 namespace SEModAPIInternal.API.Entity
 {
-	using System;
-	using System.ComponentModel;
-	using System.IO;
-	using System.Runtime.Serialization;
-	using Havok;
-	using Sandbox;
-	using SEModAPI.API;
-	using SEModAPI.API.TypeConverters;
-	using SEModAPI.API.Utility;
-	using SEModAPIInternal.API.Common;
-	using SEModAPIInternal.API.Utility;
-	using SEModAPIInternal.Support;
-	using VRage;
-	using VRage.Components;
-	using VRage.ModAPI;
-	using VRage.ObjectBuilders;
-	using VRageMath;
+    using System;
+    using System.ComponentModel;
+    using System.IO;
+    using System.Runtime.Serialization;
+    using Havok;
+    using Sandbox;
+    using Sandbox.Engine.Multiplayer;
+    using Sandbox.Game.Replication;
+    using SEModAPI.API;
+    using SEModAPI.API.TypeConverters;
+    using SEModAPI.API.Utility;
+    using SEModAPIInternal.API.Common;
+    using SEModAPIInternal.API.Utility;
+    using SEModAPIInternal.Support;
+    using VRage;
+    using VRage.Components;
+    using VRage.ModAPI;
+    using VRage.ObjectBuilders;
+    using VRageMath;
 
-	[DataContract( Name = "BaseEntityProxy" )]
+    [DataContract( Name = "BaseEntityProxy" )]
 	public class BaseEntity : BaseObject
 	{
 		#region "Attributes"
@@ -899,7 +901,7 @@ namespace SEModAPIInternal.API.Entity
 		}
 
 		#endregion "Internal"
-
+        
 		#endregion "Methods"
 	}
 
@@ -957,15 +959,15 @@ namespace SEModAPIInternal.API.Entity
 				SandboxGameAssemblyWrapper.Instance.GameAction( ( ) =>
 				{
 					BaseObject.InvokeEntityMethod( result, BaseEntityBroadcastRemovalMethod );
-				} );
+                } );
 			}
 			else
 			{
 				BaseObject.InvokeEntityMethod( result, BaseEntityBroadcastRemovalMethod );
-			}
-		}
+            }
+        }
 
-		public Object NetworkManager
+        public Object NetworkManager
 		{
 			get
 			{

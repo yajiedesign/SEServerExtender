@@ -67,6 +67,11 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="F:VRage.Components.MyHierarchyComponentBase.ChildId">
+            Identifier for the parent hierarchy.
+            
+            This is should be reliably unique within a hierarchy level but only usable by the parent.
+        </member>
         <member name="M:VRage.Components.MyHierarchyComponentBase.AddChild(VRage.ModAPI.IMyEntity,System.Boolean,System.Boolean)">
             <summary>
             Adds the child.
@@ -391,6 +396,11 @@
             <summary>
             Used by game to store model here. In game this is always of type MyModel.
             Implementation should only store and return passed object.
+            </summary>
+        </member>
+        <member name="M:VRage.Components.MyResourceSinkComponentBase.SetRequiredInputFuncByType(Sandbox.Definitions.MyDefinitionId,System.Func{System.Single})">
+            <summary>
+            Change the required input function (callback) for given type of resource. It does not call it immediatelly to update required input value.
             </summary>
         </member>
         <member name="M:VRage.Components.MyResourceSourceComponentBase.CurrentOutputByType(Sandbox.Definitions.MyDefinitionId)">
@@ -1054,6 +1064,11 @@
             Vertical sync
             </summary>
         </member>
+        <member name="F:MyCommonTexts.CaptureMouse">
+            <summary>
+            Capture Mouse
+            </summary>
+        </member>
         <member name="F:MyCommonTexts.VideoMode">
             <summary>
             Video mode
@@ -1312,11 +1327,6 @@
         <member name="F:MyCommonTexts.ErrorNameTooShort">
             <summary>
             Name is too short (min 5 characters required)
-            </summary>
-        </member>
-        <member name="F:MyCommonTexts.WorldSettings_GameMode">
-            <summary>
-            Game mode
             </summary>
         </member>
         <member name="F:MyCommonTexts.WorldSettings_GameModeSurvival">
@@ -1662,6 +1672,11 @@
         <member name="F:MyCommonTexts.ToolTipVideoOptionsHardwareCursor">
             <summary>
             HW mouse cursor is independent of game framerate. We recommend to turn it on.
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ToolTipVideoOptionsCaptureMouse">
+            <summary>
+            Weather the cursor should be captured by the game window (for Windowed and Fullscreen Window modes).
             </summary>
         </member>
         <member name="F:MyCommonTexts.ToolTipVideoOptionsVerticalSync">
@@ -2410,19 +2425,9 @@
             UI opacity
             </summary>
         </member>
-        <member name="F:MyCommonTexts.ToolTipGameOptionsUIOpacity">
-            <summary>
-            Change opacity of UI dialogs.
-            </summary>
-        </member>
         <member name="F:MyCommonTexts.ScreenOptionsGame_UIBkOpacity">
             <summary>
             UI background opacity
-            </summary>
-        </member>
-        <member name="F:MyCommonTexts.ToolTipGameOptionsUIBkOpacity">
-            <summary>
-            Change opacity of UI dialogs background.
             </summary>
         </member>
         <member name="F:MyCommonTexts.NotificationInventoryFull">
@@ -2533,11 +2538,6 @@
         <member name="F:MyCommonTexts.Multiplayer_IndirectConnection">
             <summary>
             No direct connection available.
-            </summary>
-        </member>
-        <member name="F:MyCommonTexts.Multiplayer_LastMsg">
-            <summary>
-            No message received from server for {0} seconds.
             </summary>
         </member>
         <member name="F:MyCommonTexts.Multiplayer_NoConnection">
@@ -2850,11 +2850,6 @@
             Given faction name already exists
             </summary>
         </member>
-        <member name="F:MyCommonTexts.MessageBoxErrorFactionsTag">
-            <summary>
-            Faction tag must be exactly 3 characters long
-            </summary>
-        </member>
         <member name="F:MyCommonTexts.MessageBoxErrorFactionsTagAlreadyExists">
             <summary>
             Given faction tag already exists
@@ -3100,16 +3095,6 @@
             Next toolbar
             </summary>
         </member>
-        <member name="F:MyCommonTexts.Description_Animation_Wave">
-            <summary>
-            Wave to friends (or enemies!)
-            </summary>
-        </member>
-        <member name="F:MyCommonTexts.DisplayName_Animation_Wave">
-            <summary>
-            Wave animation
-            </summary>
-        </member>
         <member name="F:MyCommonTexts.DialogTextDownloadModsFailed">
             <summary>
             Downloading mods has failed! Please check mods in world settings.
@@ -3240,11 +3225,6 @@
             Hud Warnings
             </summary>
         </member>
-        <member name="F:MyCommonTexts.NPCIdentityAdded">
-            <summary>
-            Identity {0} was added
-            </summary>
-        </member>
         <member name="F:MyCommonTexts.DialogTextIncompatibleWorldVersion">
             <summary>
             This world can not be loaded. It has been created in newer version of the game.
@@ -3268,6 +3248,11 @@
         <member name="F:MyCommonTexts.AddNewNPC">
             <summary>
             Add New Enemy Identity
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.DisplayName_BlueprintClass_Tools">
+            <summary>
+            Tools
             </summary>
         </member>
         <member name="F:MyCommonTexts.ScreenCaptionWorkshopTags">
@@ -3503,6 +3488,11 @@
         <member name="F:MyCommonTexts.VoxelHandSettingScreen_HandSnapToVoxel">
             <summary>
             Snap to voxel grid
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.VoxelHandSettingScreen_FreezePhysics">
+            <summary>
+            Freeze Physics
             </summary>
         </member>
         <member name="F:MyCommonTexts.VoxelHandProperty_AutoLevel_Area">
@@ -4050,6 +4040,201 @@
             Voice chat volume
             </summary>
         </member>
+        <member name="F:MyCommonTexts.JoinGame_ColumnTitle_RemainingTime">
+            <summary>
+            Time remaining
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.JoinGame_Lobby">
+            <summary>
+            Lobby
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.JoinGame_Waiting">
+            <summary>
+            Waiting
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.MultiplayerErrorSessionEnded">
+            <summary>
+            The game session has ended. Feel free to join another one.
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_EnableAdminMode">
+            <summary>
+            Enable creative mode tools
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_EnableAdminMode_Tooltip">
+            <summary>
+            Enables master to copy / paste ships, stations, spawn objects (SHIFT+F10), spectate (F8) and teleport (CTRL+Space)
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenPlayers_Demote">
+            <summary>
+            Demote
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenPlayers_Promote">
+            <summary>
+            Promote
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_Accelerating">
+            <summary>
+            Accelerating
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_DistanceFromPlayer">
+            <summary>
+            Further from player than {0} (m)
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_Linear">
+            <summary>
+            Linearly moving
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_WithBlockCount">
+            <summary>
+            With less blocks than {0}
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_RemoveTrash">
+            <summary>
+            Remove trash
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_StopTrash">
+            <summary>
+            Stop trash
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_NumberOfLocalTrash">
+            <summary>
+            Local trash count: {0}
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_TrashRemoval">
+            <summary>
+            Include in removal
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_ShowTrashAdminView">
+            <summary>
+            Show trash information
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_ReplicateEverything">
+            <summary>
+            Simulate all Locally
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_ReplicateEverything_Tooltip">
+            <summary>
+            USE WITH EXTREME CAUTION!      Your game may freeze until you receive everything.      Danger, this is mainly for debug purposes. This setting will make your computer simulate everything happening on server.
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_CurrentValue">
+            <summary>
+            Current value: {0}
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_CycleObjects">
+            <summary>
+            Cycle objects
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_Next">
+            <summary>
+            Next
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_Previous">
+            <summary>
+            Previous
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_First">
+            <summary>
+            First
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_Remove">
+            <summary>
+            Remove
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_Stop">
+            <summary>
+            Stop
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.DisplayName_Flammables">
+            <summary>
+            Flammables
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.MessageBoxErrorFactionsTag">
+            <summary>
+            Faction tag must be exactly 3 characters long
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.Multiplayer_LastMsg">
+            <summary>
+            No message received from server for {0} seconds.
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.NPCIdentityAdded">
+            <summary>
+            Identity {0} was added
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ToolTipGameOptionsUIOpacity">
+            <summary>
+            Change opacity of UI dialogs.
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ToolTipGameOptionsUIBkOpacity">
+            <summary>
+            Change opacity of UI dialogs background.
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.WorldSettings_GameMode">
+            <summary>
+            Game mode
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_LargeGrids">
+            <summary>
+            Find only large grids
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.ScreenDebugAdminMenu_SmallGrids">
+            <summary>
+            Find only small grids
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.BlockPropertiesText_Type">
+            <summary>
+            Type: 
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.DetailLargeGrid">
+            <summary>
+            Large Grid
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.DetailSmallGrid">
+            <summary>
+            Small Grid
+            </summary>
+        </member>
+        <member name="F:MyCommonTexts.DetailStaticGrid">
+            <summary>
+            Static Grid
+            </summary>
+        </member>
         <member name="F:Sandbox.Definitions.MyDefinitionBase.DisplayNameEnum">
             <summary>
             Enum used for localization of display name. Null for player created definitions.
@@ -4078,6 +4263,13 @@
         <member name="F:Sandbox.Definitions.MyDefinitionBase.Public">
             <summary>
             Indicates if definition should be offered in Cube builder
+            </summary>
+        </member>
+        <member name="M:Sandbox.Definitions.MyDefinitionBase.Postprocess">
+            <summary>
+            Override this in case you want to do some postprocessing of the definition before the game starts.
+            <para>Postprocess is useful if you want to process the definition before the game begins,</para>
+            <para>but you only want to do it when all the definitions are loaded and merged.</para>
             </summary>
         </member>
         <member name="P:Sandbox.Definitions.MyDefinitionBase.DisplayNameText">
@@ -4144,6 +4336,12 @@
             will be read from Model if not defined
             </summary>
         </member>
+        <member name="F:VRage.Game.ObjectBuilders.Definitions.MyObjectBuilder_FactionDefinition.IsDefault">
+            <summary>
+            This value indicates if fraction should be created by default for every new world and its owner
+            will be visible in Ownership dropdown.
+            </summary>
+        </member>
         <member name="F:Sandbox.Common.ObjectBuilders.Definitions.MyObjectBuilder_BlueprintDefinition.Result">
             <summary>
             THIS IS OBSOLETE
@@ -4153,6 +4351,11 @@
             <summary>
             Base production time in seconds, which is affected by speed increase of
             refinery or assembler.
+            </summary>
+        </member>
+        <member name="F:Sandbox.Common.ObjectBuilders.Definitions.MyObjectBuilder_CharacterDefinition.PhysicalMaterial">
+            <summary>
+            Physical material of the character.
             </summary>
         </member>
         <member name="T:Medieval.ObjectBuilders.Definitions.MyObjectBuilder_CogWheelBlockDefinition">
@@ -4187,6 +4390,11 @@
             <summary>
             When block has mountpoint on at least one side, it will autorotate so that this side is touching the surface.
             Otherwise, full range of rotations is allowed.
+            </summary>
+        </member>
+        <member name="F:Sandbox.Common.ObjectBuilders.MyObjectBuilder_PhysicalObject.DurabilityHP">
+            <summary>
+            This is used for GUI to show the amount of health points (durability) of the weapons and tools. This is updated through Durability entity component if entity exists..
             </summary>
         </member>
         <member name="T:Sandbox.Common.ObjectBuilders.Definitions.MyGlobalEventTypeEnum">
@@ -4225,7 +4433,7 @@
             @param latitude Latitude cosine
             @param slope Surface dominant angle sine.
         </member>
-        <member name="M:Sandbox.Common.ObjectBuilders.Definitions.MyPlanetSurfaceRule.Check(System.Single,System.Single,System.Single)">
+        <member name="M:Sandbox.Common.ObjectBuilders.Definitions.MyPlanetSurfaceRule.Check(System.Single,System.Single,System.Single,System.Single)">
             Check that a rule matches terrain properties.
             
             @param height Height ration to the height map.
@@ -4248,6 +4456,24 @@
             
             The angle is expected to be in degrees.
         </member>
+        <member name="T:Sandbox.Common.ObjectBuilders.Definitions.MyReflectiveRangeValue">
+            Reflective because it can be reflected to the oposite range.
+            
+            Structs not inheriting from structs is stupid.
+        </member>
+        <member name="M:Sandbox.Common.ObjectBuilders.Definitions.MyReflectiveRangeValue.ConvertToCosine">
+            When the range is an angle this method changes it to the cosines of the angle.
+            
+            The angle is expected to be in degrees.
+            
+            Also beware that cosine is a decreasing function in [0,90], for that reason the minimum and maximum are swaped.
+            
+        </member>
+        <member name="M:Sandbox.Common.ObjectBuilders.Definitions.MyReflectiveRangeValue.ConvertToSine">
+            When the range is an angle this method changes it to the sines of the angle.
+            
+            The angle is expected to be in degrees.
+        </member>
         <member name="T:Medieval.ObjectBuilders.Definitions.MyObjectBuilder_SwitchBlockDefinition">
             <summary>
             Definition for one small grid switch block (used inside large block as mechanical subblock).
@@ -4256,6 +4482,13 @@
         <member name="T:Medieval.ObjectBuilders.Definitions.MyObjectBuilder_TorsionSpringBlockDefinition">
             <summary>
             Definition for one small grid torsion spring (used inside large block as mechanical subblock).
+            </summary>
+        </member>
+        <member name="M:VRage.ObjectBuilders.MyObjectBuilder_EntityBase.Remap(VRage.ModAPI.IMyRemapHelper)">
+            <summary>
+            Remaps this entity's entityId to a new value.
+            If there are cross-referenced between different entities in this object builder, the remapHelper should be used to rememeber these
+            references and retrieve them.
             </summary>
         </member>
         <member name="T:Sandbox.Common.ObjectBuilders.Definitions.MyUpgradeModifierType">
@@ -4308,13 +4541,6 @@
             Whether the given block should be used when spawning the component which it contains
             </summary>
         </member>
-        <member name="M:VRage.ObjectBuilders.MyObjectBuilder_EntityBase.Remap(VRage.ModAPI.IMyRemapHelper)">
-            <summary>
-            Remaps this entity's entityId to a new value.
-            If there are cross-referenced between different entities in this object builder, the remapHelper should be used to rememeber these
-            references and retrieve them.
-            </summary>
-        </member>
         <member name="P:Sandbox.Common.ObjectBuilders.MyObjectBuilder_ProductionBlock.Inventory">
             <summary>
             Don't use. Backward compatibility only. Use InputInventory and OutputInventory instead.
@@ -4328,16 +4554,6 @@
         <member name="P:Sandbox.Common.ObjectBuilders.MyObjectBuilder_Checkpoint.GameTime">
             <summary>
             Obsolete. Use ElapsedGameTime
-            </summary>
-        </member>
-        <member name="F:Sandbox.Common.ObjectBuilders.MyObjectBuilder_Inventory.Size">
-            <summary>
-            Obsolete: kept for backward compatibility
-            </summary>
-        </member>
-        <member name="F:Sandbox.Common.ObjectBuilders.MyObjectBuilder_Inventory.InventoryFlags">
-            <summary>
-            Obsolete: kept for backward compatibility
             </summary>
         </member>
         <member name="P:Sandbox.Common.ObjectBuilders.MyObjectBuilder_InventoryItem.Content">
